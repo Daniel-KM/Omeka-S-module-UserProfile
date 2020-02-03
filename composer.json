@@ -1,0 +1,28 @@
+{
+    "name": "daniel-km/omeka-s-module-guest-profile",
+    "description": "Guest Profile (module for Omeka S)",
+    "type": "library",
+    "license": "CECILL-2.1",
+    "authors": [
+        {
+            "name": "Daniel Berthereau",
+            "email": "Daniel.packagist@Berthereau.net"
+        }
+    ],
+    "homepage": "https://github.com/Daniel-KM/Omeka-S-module-GuestProfile",
+    "support": {
+        "issues": "https://github.com/Daniel-KM/Omeka-S-module-GuestProfile/issues",
+        "forum": "https://forum.omeka.org/"
+    },
+    "keywords": [
+        "Omeka S",
+        "module",
+        "user",
+        "profile"
+    ],
+    "autoload": {
+        "psr-4": {
+            "GuestProfile\\": "src/"
+        }
+    }
+}
