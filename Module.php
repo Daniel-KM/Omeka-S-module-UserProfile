@@ -72,14 +72,17 @@ class Module extends AbstractModule
         if ($status->isSiteRequest()) {
             /** @var \Zend\Router\Http\RouteMatch $routeMatch */
             $routeMatch = $services->get('Application')->getMvcEvent()->getRouteMatch();
-            if (!in_array($routeMatch->getParam('controller'), [\Guest\Controller\Site\GuestController::class, 'user'])) {
+            $controller = $routeMatch->getParam('controller');
+            if ($controller === \Guest\Controller\Site\AnonymousController::class) {
+                if ($routeMatch->getParam('action') !== 'register') {
+                    return;
+                }
+            } elseif ($controller === \Guest\Controller\Site\GuestController::class) {
+                $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+                $routeMatch->setParam('id', $user->getId());
+            } else {
                 return;
             }
-            $user = $services->get('Omeka\AuthenticationService')->getIdentity();
-            if (!$user) {
-                return;
-            }
-            $routeMatch->setParam('id', $user->getId());
             $this->handleAnySettings($event, 'user_settings');
         } else {
             parent::handleUserSettings($event);
