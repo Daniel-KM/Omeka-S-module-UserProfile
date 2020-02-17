@@ -24,10 +24,12 @@ return [
     ],
     'guestprofile' => [
         'site_settings' => [
-            'guestprofile_field_research' => false,
+            'guestprofile_field_1' => '',
+            'guestprofile_field_2' => '',
         ],
         'user_settings' => [
-            'guestprofile_field_research' => '',
+            'guestprofile_field_1' => '',
+            'guestprofile_field_2' => '',
         ],
     ],
 ];
