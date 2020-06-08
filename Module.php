@@ -19,19 +19,9 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    protected $dependency = 'Guest';
-
     public function preInstall()
     {
         $services = $this->getServiceLocator();
-        if (!$this->isModuleActive($this->dependency)) {
-            $translator = $services->get('MvcTranslator');
-            $message = new Message($translator->translate('This module requires the module "%s".'),
-                $this->dependency
-            );
-            throw new ModuleCannotInstallException($message);
-        }
-
         $module = $services->get('Omeka\ModuleManager')->getModule('Generic');
         if (!$module || version_compare($module->getIni('version'), '3.0.13', '<')) {
             $translator = $services->get('MvcTranslator');
@@ -66,6 +56,7 @@ class Module extends AbstractModule
 
     public function handleUserSettings(Event $event)
     {
+        // Compatibility with module Guest.
         $services = $this->getServiceLocator();
         /** @var \Omeka\Mvc\Status $status */
         $status = $services->get('Omeka\Status');
