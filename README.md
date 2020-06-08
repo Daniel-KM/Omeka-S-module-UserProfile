@@ -1,16 +1,16 @@
-Guest Profile (module for Omeka S)
+User Profile (module for Omeka S)
 ==================================
 
-[Guest Profile] is a module for [Omeka S] that adds a new setting to the user
+[User Profile] is a module for [Omeka S] that adds a new setting to the user
 board: "Research subject".
 
 
 Installation
 ------------
 
-Install [Guest] first.
+Install optional modules [Guest] and [Generic].
 
-Uncompress files and rename module folder "GuestProfile".
+Uncompress files and rename module folder "UserProfile".
 
 See general end user documentation for [Installing a module].
 
@@ -68,11 +68,11 @@ Copyright
 This module was designed for [Fondation Maison de Salins].
 
 
-[Guest Profile]: https://github.com/Daniel-KM/Omeka-S-module-GuestProfile
+[User Profile]: https://github.com/Daniel-KM/Omeka-S-module-UserProfile
 [Omeka S]: https://omeka.org/s
 [Guest User]: https://github.com/Daniel-KM/Omeka-S-module-GuestUser
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-GuestProfile/issues
+[module issues]: https://github.com/Daniel-KM/Omeka-S-module-UserProfile/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org

@@ -1,5 +1,5 @@
 <?php
-namespace GuestProfile\Form;
+namespace UserProfile\Form;
 
 use Zend\Form\Element;
 use Zend\Form\Fieldset;
@@ -9,13 +9,13 @@ class UserSettingsFieldset extends Fieldset
     /**
      * @var string
      */
-    protected $label = 'Guest Profile'; // @translate
+    protected $label = 'User Profile'; // @translate
 
     public function init()
     {
         $this
             ->add([
-                'name' => 'guestprofile_field_1',
+                'name' => 'userprofile_field_1',
                 'type' => Element\Select::class,
                 'options' => [
                     'label' => 'Statut', // @translate
@@ -34,17 +34,17 @@ class UserSettingsFieldset extends Fieldset
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'guestprofile_field_1',
+                    'id' => 'userprofile_field_1',
                 ],
             ])
             ->add([
-                'name' => 'guestprofile_field_2',
+                'name' => 'userprofile_field_2',
                 'type' => Element\Textarea::class,
                 'options' => [
                     'label' => 'Autre statut…', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'guestprofile_field_2',
+                    'id' => 'userprofile_field_2',
                     'placeholder' => 'Indiquez votre statut…', // @translate
                 ],
             ])

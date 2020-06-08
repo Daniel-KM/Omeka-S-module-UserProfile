@@ -1,0 +1,18 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Entity\User $user
+ * @var \Omeka\Settings\UserSettings $userSettings
+ */
+
+$translate = $this->plugin('translate');
+?>
+
+<div class="meta-group user-profile">
+    <h4><?= $translate('User profile') ?></h4>
+    <div class="value user-profile">
+        <div>
+            <?= sprintf($translate('Research subject: %s'), $userSettings->get('userprofile_field_research')) ?>
+        </div>
+    </div>
+</div>

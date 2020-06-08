@@ -1,5 +1,5 @@
 <?php
-namespace GuestProfile;
+namespace UserProfile;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
     require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
@@ -93,14 +93,14 @@ class Module extends AbstractModule
     {
         $view = $event->getTarget();
         $user = $view->resource;
-        $this->viewUserData($view, $user, 'common/admin/guest-profile');
+        $this->viewUserData($view, $user, 'common/admin/user-profile');
     }
 
     public function viewUserShowAfter(Event $event)
     {
         $view = $event->getTarget();
         $user = $view->vars()->user;
-        $this->viewUserData($view, $user, 'common/admin/guest-profile-list');
+        $this->viewUserData($view, $user, 'common/admin/user-profile-list');
     }
 
     protected function viewUserData(PhpRenderer $view, UserRepresentation $user, $partial)

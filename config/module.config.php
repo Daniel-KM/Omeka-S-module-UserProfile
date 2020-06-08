@@ -1,5 +1,5 @@
 <?php
-namespace GuestProfile;
+namespace UserProfile;
 
 return [
     'view_manager' => [
@@ -22,14 +22,14 @@ return [
             ],
         ],
     ],
-    'guestprofile' => [
+    'userprofile' => [
         'site_settings' => [
-            'guestprofile_field_1' => '',
-            'guestprofile_field_2' => '',
+            'userprofile_field_1' => '',
+            'userprofile_field_2' => '',
         ],
         'user_settings' => [
-            'guestprofile_field_1' => '',
-            'guestprofile_field_2' => '',
+            'userprofile_field_1' => '',
+            'userprofile_field_2' => '',
         ],
     ],
 ];
