@@ -36,6 +36,12 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
     {
+        $sharedEventManager->attach(
+            \Omeka\Api\Representation\UserRepresentation::class,
+            'rep.resource.json',
+            [$this, 'filterResourceJsonUser']
+        );
+
         // Manage user settings via rest api.
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\UserAdapter::class,
@@ -195,6 +201,23 @@ class Module extends AbstractModule
         }
 
         return $form;
+    }
+
+    public function filterResourceJsonUser(Event $event)
+    {
+        $user = $event->getTarget();
+        $jsonLd = $event->getParam('jsonLd');
+
+        $userSettings = $this->getServiceLocator()->get('Omeka\Settings\User');
+        $userSettings->setTargetId($user->id());
+        $fieldset = $this->userSettingsFieldset($user->id());
+
+        foreach ($fieldset->getElements() as $element) {
+            $key = $element->getName();
+            $jsonLd['o:setting'][$key] = $userSettings->get($key);
+        }
+
+        $event->setParam('jsonLd', $jsonLd);
     }
 
     public function apiHydratePreUser(Event $event)
