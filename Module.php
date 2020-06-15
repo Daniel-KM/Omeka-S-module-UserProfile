@@ -11,8 +11,10 @@ use Generic\AbstractModule;
 use Omeka\Api\Representation\UserRepresentation;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Omeka\Stdlib\Message;
+use Zend\Config\Reader\Ini as IniReader;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Renderer\PhpRenderer;
 
 class Module extends AbstractModule
@@ -23,10 +25,10 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
         $module = $services->get('Omeka\ModuleManager')->getModule('Generic');
-        if (!$module || version_compare($module->getIni('version'), '3.0.13', '<')) {
+        if ($module && version_compare($module->getIni('version'), '3.0.20', '<')) {
             $translator = $services->get('MvcTranslator');
             $message = new Message($translator->translate('This module requires the module "%1$s" >= %2$s.'),
-                'Generic', '3.0.13'
+                'Generic', '3.0.20'
             );
             throw new ModuleCannotInstallException($message);
         }
@@ -34,7 +36,7 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
     {
-        // Add the guest profile to the user show admin pages.
+        // Add the user profile to the user show admin pages.
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\User',
             'view.details',
@@ -46,12 +48,52 @@ class Module extends AbstractModule
             [$this, 'viewUserShowAfter']
         );
 
-        // Add the guest profile elements to the user form.
+        // Add the user profile elements to the user form.
         $sharedEventManager->attach(
             \Omeka\Form\UserForm::class,
             'form.add_elements',
             [$this, 'handleUserSettings']
         );
+    }
+
+    public function handleConfigForm(AbstractController $controller)
+    {
+        if (!parent::handleConfigForm($controller)) {
+            return false;
+        }
+
+        $this->updateListFields();
+        return true;
+    }
+
+    protected function updateListFields()
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $elements = $settings->get('userprofile_elements');
+        if (!$elements) {
+            $settings->set('userprofile_fields', []);
+            return;
+        }
+
+        $iniReader = new IniReader;
+        $ini = $iniReader->fromString($elements);
+        if (empty($ini['elements'])) {
+            $settings->set('userprofile_fields', []);
+            return;
+        }
+
+        $fields = [];
+        foreach ($ini['elements'] as $element) {
+            if (!isset($element['name'])) {
+                continue;
+            }
+            $fields[$element['name']] = empty($element['options']['label'])
+                ? $element['name']
+                : $element['options']['label'];
+        }
+        $settings->set('userprofile_fields', $fields);
     }
 
     public function handleUserSettings(Event $event)
@@ -80,6 +122,57 @@ class Module extends AbstractModule
         }
     }
 
+    protected function handleAnySettings(Event $event, $settingsType)
+    {
+        if ($settingsType !== 'user_settings') {
+            return parent::handleAnySettings($event, $settingsType);
+        }
+
+        $form = parent::handleAnySettings($event, $settingsType);
+
+        // Specific to this module.
+        $services = $this->getServiceLocator();
+        $formFieldset = $form->get('user-settings');
+
+        $settings = $services->get('Omeka\Settings');
+        $elements = $settings->get('userprofile_elements', '');
+
+        $userSettings = $services->get('Omeka\Settings\User');
+        if ($elements) {
+            $iniReader = new IniReader;
+            $ini = $iniReader->fromString($elements);
+            if (!empty($ini['elements'])) {
+                foreach ($ini['elements'] as $name => $element) {
+                    $data[$name] = $userSettings->get($name);
+                    $formFieldset
+                        ->add($element)
+                        ->get($name)->setValue($data[$name]);
+                }
+            }
+
+            // Fix to manage empty values for selects and multicheckboxes.
+            // @see \Omeka\Controller\SiteAdmin\IndexController::themeSettingsAction()
+            $inputFilter = $form->getInputFilter()->get('user-settings');
+            foreach ($formFieldset->getElements() as $element) {
+                if ($element instanceof \Zend\Form\Element\MultiCheckbox
+                    || $element instanceof \Zend\Form\Element\Tel
+                    || ($element instanceof \Zend\Form\Element\Select
+                        && $element->getOption('empty_option') !== null)
+                ) {
+                    if (!$element->getAttribute('required')) {
+                        $inputFilter->add([
+                            'name' => $element->getName(),
+                            'allow_empty' => true,
+                            'required' => false,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return $form;
+    }
+
     public function viewUserDetails(Event $event)
     {
         $view = $event->getTarget();
@@ -97,6 +190,12 @@ class Module extends AbstractModule
     protected function viewUserData(PhpRenderer $view, UserRepresentation $user, $partial)
     {
         $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $elements = $settings->get('userprofile_elements', '');
+        if (!$elements) {
+            return;
+        }
+
         $userSettings = $services->get('Omeka\Settings\User');
         $userSettings->setTargetId($user->id());
         echo $view->partial(
@@ -104,6 +203,7 @@ class Module extends AbstractModule
             [
                 'user' => $user,
                 'userSettings' => $userSettings,
+                'fields' => $settings->get('userprofile_fields', []),
             ]
         );
     }

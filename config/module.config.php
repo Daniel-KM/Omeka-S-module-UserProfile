@@ -9,6 +9,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\UserSettingsFieldset::class => Form\UserSettingsFieldset::class,
         ],
     ],
@@ -23,13 +24,13 @@ return [
         ],
     ],
     'userprofile' => [
-        'site_settings' => [
-            'userprofile_field_1' => '',
-            'userprofile_field_2' => '',
+        'config' => [
+            'userprofile_elements' => '',
+            // Hidden parameter.
+            'userprofile_fields' => [],
         ],
+        // Keep key to simplify process.
         'user_settings' => [
-            'userprofile_field_1' => '',
-            'userprofile_field_2' => '',
         ],
     ],
 ];

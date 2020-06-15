@@ -3,18 +3,32 @@
  * @var \Zend\View\Renderer\PhpRenderer $this
  * @var \Omeka\Entity\User $user
  * @var \Omeka\Settings\UserSettings $userSettings
+ * @var array $fields
  */
 
 $translate = $this->plugin('translate');
 ?>
 
+<style>
+.value.user-profile .value + .value.user-profile .value:before {
+    content: '; ';
+}
+</style>
+
 <div class="property user-profile">
     <h4><?= $translate('User profile') ?></h4>
     <div class="value user-profile">
         <ul class="user-profile">
+            <?php foreach ($fields as $field => $label): ?>
             <li>
-                <?= sprintf($translate('Research subject: %s'), $userSettings->get('userprofile_field_research')) ?>
+                <span class="profile-field"><?= $translate($label) ?></span>
+                <?php $values = $userSettings->get($field); ?>
+                <?php if (!is_array($values)) $values = [$values]; ?>
+                <?php foreach ($values as $value): ?>
+                <span class="value"><?= $value ?></span>
+                <?php endforeach; ?>
             </li>
+            <?php endforeach; ?>
         </ul>
     </div>
 </div>
