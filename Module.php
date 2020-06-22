@@ -42,7 +42,13 @@ class Module extends AbstractModule
             [$this, 'filterResourceJsonUser']
         );
 
-        // Manage user settings via rest api.
+        // Manage user settings via rest api (and the new user via ui).
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\UserAdapter::class,
+            // 'api.create.pre',
+            'api.create.post',
+            [$this, 'apiCreatePreUser']
+        );
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\UserAdapter::class,
             'api.hydrate.pre',
@@ -51,12 +57,12 @@ class Module extends AbstractModule
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\UserAdapter::class,
             'api.create.post',
-            [$this, 'apiCreateOrUpdatePostUser']
+            [$this, 'apiCreatePostUser']
         );
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\UserAdapter::class,
             'api.update.post',
-            [$this, 'apiCreateOrUpdatePostUser']
+            [$this, 'apiUpdatePostUser']
         );
 
         // Add the user profile to the user show admin pages.
@@ -220,6 +226,35 @@ class Module extends AbstractModule
         $event->setParam('jsonLd', $jsonLd);
     }
 
+    /**
+    * Unlike update, create cannot manage appended fields in views currently.
+    *
+     * @param Event $event
+     */
+    public function apiCreatePreUser(Event $event)
+    {
+        /** @var \Omeka\Mvc\Status $status */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+        if ($status->isApiRequest()) {
+            return;
+        }
+
+        /** @var \Zend\Http\PhpEnvironment\Request $request */
+        $request = $services->get('Request');
+        $post = $request->getPost();
+        $userSettings = $post->offsetGet('user-settings') ?: [];
+        $post->offsetSet('o:setting', $userSettings);
+        $request->setPost($post);
+
+        /** @var \Omeka\Api\Request $request */
+        $request = $event->getParam('request');
+        $request->setContent($post->toArray());
+
+        // TODO Check request from admin and guest form.
+        // $this->checkRequest($request);
+    }
+
     public function apiHydratePreUser(Event $event)
     {
         $services = $this->getServiceLocator();
@@ -231,6 +266,11 @@ class Module extends AbstractModule
             return;
         }
 
+        $this->checkRequest($event);
+    }
+
+    protected function checkRequest(Event $event)
+    {
         // TODO Manage "required" during create and update.
 
         // Only if the request has settings.
@@ -321,17 +361,48 @@ class Module extends AbstractModule
         }
     }
 
-    public function apiCreateOrUpdatePostUser(Event $event)
+    public function apiCreatePostUser(Event $event)
     {
-        $services = $this->getServiceLocator();
-
-        // Only for the rest api manager.
         /** @var \Omeka\Mvc\Status $status */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+        if (!$status->isApiRequest()) {
+            /** @var \Zend\Http\PhpEnvironment\Request $request */
+            $request = $services->get('Request');
+            $post = $request->getPost();
+            $userSettings = $post->offsetGet('user-settings') ?: [];
+            $post->offsetSet('o:setting', $userSettings);
+            $request->setPost($post);
+
+            /** @var \Omeka\Api\Request $request */
+            $request = $event->getParam('request');
+            $request->setContent($post->toArray());
+        }
+        $this->apiCreateOrUpdatePostUser($event);
+    }
+
+    /**
+     * Unlike create, update is managed via the settings because it displays the
+     * form a new time. So a specific check is done for update.
+     *
+     * @param Event $event
+     */
+    public function apiUpdatePostUser(Event $event)
+    {
+        // Only for the rest api manager: in public or admin, the view is
+        // reloaded and managed during the creation of the form.
+
+        /** @var \Omeka\Mvc\Status $status */
+        $services = $this->getServiceLocator();
         $status = $services->get('Omeka\Status');
         if (!$status->isApiRequest()) {
             return;
         }
+        $this->apiCreateOrUpdatePostUser($event);
+    }
 
+    protected function apiCreateOrUpdatePostUser(Event $event)
+    {
         // Only if the request has settings.
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
@@ -342,6 +413,7 @@ class Module extends AbstractModule
 
         /** @var \Omeka\Stdlib\ErrorStore $errorStore */
         $user = $event->getParam('response')->getContent();
+        $services = $this->getServiceLocator();
         $userSettings = $services->get('Omeka\Settings\User');
         $userSettings->setTargetId($user->getId());
         $fieldset = $this->userSettingsFieldset($user->getId());
@@ -357,7 +429,8 @@ class Module extends AbstractModule
             $element = $fieldset->get($key);
             $isMultipleValues = is_array($value);
 
-            // Some useless cleaning.
+            // Some cleaning, required because some fields are not checked
+            // during creation via form.
             if (method_exists($element, 'getValueOptions') && $isMultipleValues) {
                 $value = array_keys(array_intersect_key($element->getValueOptions(), array_flip($value)));
             } elseif ($element instanceof \Zend\Form\Element\Checkbox) {
