@@ -40,6 +40,7 @@ elements.userprofile_phone.attributes.id = "userprofile_phone"
 elements.userprofile_organisation.name                          = "userprofile_organisation"
 elements.userprofile_organisation.type                          = "Select"
 elements.userprofile_organisation.options.label                 = "Organisation"
+elements.userprofile_organisation.options.empty_option          = ""
 elements.userprofile_organisation.options.value_options.none    = "None"
 elements.userprofile_organisation.options.value_options.Alpha   = "Alpha"
 elements.userprofile_organisation.options.value_options.Beta    = "Beta"
@@ -48,12 +49,105 @@ elements.userprofile_organisation.attributes.id                 = "userprofile_o
 elements.userprofile_organisation.attributes.class              = "chosen-select"
 elements.userprofile_organisation.attributes.data-placeholder   = "Select an organisation…"
 ```
-- That’s all!
 
-Note: a key cannot contain a vertical apostrophe “`'`”, so use real apostrophe
-“`’`” instead.
+- `xml`
+
+```xml
+<elements>
+    <userprofile_phone>
+        <name>userprofile_phone</name>
+        <type>Tel</type>
+        <options>
+            <label>Phone</label>
+        </options>
+        <attributes>
+            <id>userprofile_phone</id>
+        </attributes>
+    </userprofile_phone>
+
+    <userprofile_organisation>
+        <name>userprofile_organisation</name>
+        <type>Select</type>
+        <options>
+            <label>Organisation</label>
+            <empty_option></empty_option>
+            <value_options>
+                <value>none</value>
+                <label>None</label>
+            </value_options>
+            <value_options>
+                <value>alpha</value>
+                <label>Alpha</label>
+            </value_options>
+            <value_options>
+                <value>beta</value>
+                <label>Beta</label>
+            </value_options>
+            <value_options>
+                <value>Gamma’s Delta</value>
+                <label>Gamma’s Delta</label>
+            </value_options>
+        </options>
+        <attributes>
+            <id>userprofile_organisation</id>
+            <class>chosen-select</class>
+            <data-placeholder>Select an organisation…</data-placeholder>
+        </attributes>
+    </userprofile_organisation>
+</elements>
+```
+
+- `json`
+
+```json
+{
+    "elements":{
+        "userprofile_phone": {
+            "name": "userprofile_phone",
+            "type": "Tel",
+            "options": {
+                "label": "Phone"
+            },
+            "attributes": {
+                "id": "userprofile_phone"
+            }
+        },
+
+        "userprofile_organisation": {
+            "name": "userprofile_organisation",
+            "type": "Select",
+            "options": {
+                "label": "Organisation",
+                "empty_option": "",
+                "value_options": {
+                    "none": "None",
+                    "Alpha": "Alpha",
+                    "Beta": "Beta",
+                    "Gamma’s Delta": "Gamma’s Delta"
+                }
+            },
+            "attributes": {
+                "id": "userprofile_organisation",
+                "class": "chosen-select",
+                "data-placeholder": "Select an organisation…"
+            }
+        }
+    }
+}
+```
+
+Each format has pros and cons. The main point to check are the keys.
+With the format `ini`, two characters are forbidden in keys : the dot "`.`"  and
+the vertical apostrophe “`'`”. You can replace the last by a real apostrophe
+“`’`” instead, but you cannot replace the dot. In that case, use format `xml`
+or `json`. With xml, the keys cannot contains space, greater/lower, single and
+double quote. With json, it must be well formed, in particular without trailing
+comma `,` on last key of each group.
+
+### Rest api
 
 For rest api, use something like:
+
 ```sh
 curl --data '{"o:email":"test.0001@test.com","o:name":"Test 0001","o:role":"researcher","o:is_active":true,"o:setting":{"locale":"fr","default_resource_template":"","userprofile_organisation":"Alpha"}}' --header "Content-Type: application/json" 'https://example.org/api/users?key_identity=xxx&key_credential=yyy'
 ```
@@ -121,6 +215,7 @@ currently managed with [Greenstone].
 [Omeka S]: https://omeka.org/s
 [Guest User]: https://github.com/Daniel-KM/Omeka-S-module-GuestUser
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
+[Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
 [api credential key]: https://omeka.org/s/docs/developer/api/rest_api/#authentication
 [module issues]: https://github.com/Daniel-KM/Omeka-S-module-UserProfile/issues
