@@ -20,8 +20,17 @@ See general end user documentation for [Installing a module].
 Usage
 -----
 
-- Fill the config form of the module with the ini format of Zend/Laminas forms,
-  like the [Omeka themes]:
+### Configuration
+
+The fields are added via the config form of the module. The main option creates
+a [Zend/Laminas form], so the the options are the one used to create html input
+fields with a name, a type, attributes and options. Three formats are allowed:
+`ini`, `xml`, or `json`.
+
+- `ini`
+
+See an example in [Omeka themes].
+
 ```ini
 elements.userprofile_phone.name          = "userprofile_phone"
 elements.userprofile_phone.type          = "Tel"

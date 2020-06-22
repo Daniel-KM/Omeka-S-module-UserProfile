@@ -12,6 +12,8 @@ use Omeka\Api\Representation\UserRepresentation;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Omeka\Stdlib\Message;
 use Zend\Config\Reader\Ini as IniReader;
+use Zend\Config\Reader\Json as JsonReader;
+use Zend\Config\Reader\Xml as XmlReader;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
 use Zend\Mvc\Controller\AbstractController;
@@ -100,21 +102,10 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $elements = $settings->get('userprofile_elements');
-        if (!$elements) {
-            $settings->set('userprofile_fields', []);
-            return;
-        }
-
-        $iniReader = new IniReader;
-        $ini = $iniReader->fromString($elements);
-        if (empty($ini['elements'])) {
-            $settings->set('userprofile_fields', []);
-            return;
-        }
+        $fieldsConfig = $this->readConfigElements();
 
         $fields = [];
-        foreach ($ini['elements'] as $element) {
+        foreach ($fieldsConfig['elements'] as $element) {
             if (!isset($element['name'])) {
                 continue;
             }
@@ -165,43 +156,37 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $formFieldset = $form->get('user-settings');
 
-        $settings = $services->get('Omeka\Settings');
-        $elements = $settings->get('userprofile_elements', '');
-
         $status = $services->get('Omeka\Status');
         $userExist = !$status->isApiRequest() || $status->getRouteMatch()->getParam('id');
         $userSettings = $userExist
             ? $services->get('Omeka\Settings\User')
             : null;
 
+        $elements = $this->readConfigElements();
         if ($elements) {
-            $iniReader = new IniReader;
-            $ini = $iniReader->fromString($elements);
-            if (!empty($ini['elements'])) {
-                foreach ($ini['elements'] as $name => $element) {
-                    $data[$name] = $userExist ? $userSettings->get($name) : null;
-                    $formFieldset
-                        ->add($element)
-                        ->get($name)->setValue($data[$name]);
-                }
+            foreach ($elements['elements'] as $name => $element) {
+                $data[$name] = $userExist ? $userSettings->get($name) : null;
+                $formFieldset
+                    ->add($element)
+                    ->get($name)->setValue($data[$name]);
             }
+        }
 
-            // Fix to manage empty values for selects and multicheckboxes.
-            // @see \Omeka\Controller\SiteAdmin\IndexController::themeSettingsAction()
-            $inputFilter = $form->getInputFilter()->get('user-settings');
-            foreach ($formFieldset->getElements() as $element) {
-                if ($element instanceof \Zend\Form\Element\MultiCheckbox
-                    || $element instanceof \Zend\Form\Element\Tel
-                    || ($element instanceof \Zend\Form\Element\Select
-                        && $element->getOption('empty_option') !== null)
-                ) {
-                    if (!$element->getAttribute('required')) {
-                        $inputFilter->add([
-                            'name' => $element->getName(),
-                            'allow_empty' => true,
-                            'required' => false,
-                        ]);
-                    }
+        // Fix to manage empty values for selects and multicheckboxes.
+        // @see \Omeka\Controller\SiteAdmin\IndexController::themeSettingsAction()
+        $inputFilter = $form->getInputFilter()->get('user-settings');
+        foreach ($formFieldset->getElements() as $element) {
+            if ($element instanceof \Zend\Form\Element\MultiCheckbox
+                || $element instanceof \Zend\Form\Element\Tel
+                || ($element instanceof \Zend\Form\Element\Select
+                    && $element->getOption('empty_option') !== null)
+            ) {
+                if (!$element->getAttribute('required')) {
+                    $inputFilter->add([
+                        'name' => $element->getName(),
+                        'allow_empty' => true,
+                        'required' => false,
+                    ]);
                 }
             }
         }
@@ -499,5 +484,45 @@ class Module extends AbstractModule
                 'fields' => $settings->get('userprofile_fields', []),
             ]
         );
+    }
+
+    protected function readConfigElements()
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $elements = $settings->get('userprofile_elements');
+        if (!$elements) {
+            return ['elements' => []];
+        }
+
+        try {
+            $reader = new IniReader;
+            $config = $reader->fromString($elements);
+            if ($config && count($config['elements'])) {
+                return $config;
+            }
+        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        }
+
+        try {
+            $reader = new XmlReader;
+            $config= $reader->fromString($elements);
+            if ($config && count($config)) {
+                return ['elements' => $config];
+            }
+        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        }
+
+        try {
+            $reader = new JsonReader;
+            $config = $reader->fromString($elements);
+            if ($config && count($config['elements'])) {
+                return $config;
+            }
+        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        }
+
+        return ['elements' => []];
     }
 }

@@ -31,8 +31,9 @@ TXT;
                 'name' => 'userprofile_elements',
                 'type' => Element\Textarea::class,
                 'options' => [
-                    'label' => 'List of fields', // @translate
-                    'info' => "List all input elements as an ini list, like the config of Omeka themes. It is recommended to prepend “userprofile_” to field names. No vertical apostrophe “'” in keys (use “’” instead).", // @translate
+                    'label' => 'List of fields (as xml, json, or ini)', // @translate
+                    'info' => "List all input elements as xml, json or ini. It is recommended to prepend “userprofile_” to field names.", // @translate
+                    'documentation' => 'https://github.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
                 ],
                 'attributes' => [
                     'id' => 'userprofile_elements',
