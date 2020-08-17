@@ -301,6 +301,17 @@ class Module extends AbstractModule
             // Currently, only select and multicheckbox are checked.
             if (method_exists($element, 'getValueOptions')) {
                 $valueOptions = $element->getValueOptions();
+                // Note: value options can be an array of arrays with keys value
+                // and label, iin particular when the config uses key with
+                // forbidden letters.
+                if (is_array(reset($valueOptions))) {
+                    $result = [];
+                    foreach ($valueOptions as $array) {
+                        $result[$array['label']] = $array['value'];
+                    }
+                    $valueOptions = $result;
+                }
+
                 if ($isMultipleValues) {
                     $values = array_intersect_key($valueOptions, array_flip($value));
                     if (method_exists($element, 'isMultiple') && !$element->isMultiple()) {
