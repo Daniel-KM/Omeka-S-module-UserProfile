@@ -456,6 +456,8 @@ class Module extends AbstractModule
                 'current_password' => false,
                 'include_password' => false,
                 'include_key' => false,
+                'include_site_role_remove' => false,
+                'include_site_role_add' => false,
             ]);
         $form->init();
         return $form
