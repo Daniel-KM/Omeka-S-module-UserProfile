@@ -212,8 +212,8 @@ class Module extends AbstractModule
     }
 
     /**
-    * Unlike update, create cannot manage appended fields in views currently.
-    *
+     * Unlike update, create cannot manage appended fields in views currently.
+     *
      * @param Event $event
      */
     public function apiCreatePreUser(Event $event)
@@ -518,7 +518,7 @@ class Module extends AbstractModule
 
         try {
             $reader = new XmlReader;
-            $config= $reader->fromString($elements);
+            $config = $reader->fromString($elements);
             if ($config && count($config)) {
                 return ['elements' => $config];
             }
