@@ -20,7 +20,7 @@ $translate = $this->plugin('translate');
     <div class="value user-profile">
         <?php foreach ($fields as $field => $label): ?>
         <div>
-            <span class="profile-field"><?= $translate($label) ?></span>
+            <span class="profile-field"><?= $translate($label) ?>:</span>
             <?php $values = $userSettings->get($field); ?>
             <?php if (!is_array($values)) $values = [$values]; ?>
             <?php foreach ($values as $value): ?>
