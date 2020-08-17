@@ -225,6 +225,7 @@ currently managed with [Greenstone].
 [OSI]: http://opensource.org
 [Fondation Maison de Salins]: https://collections.maison-salins.fr
 [digital library Manioc]: http://www.manioc.org
-[Université des Antilles et de la Guyane]: http://www.univ-ag.fr
+[Université des Antilles]: http://www.univ-antilles.fr
+[Université de la Guyane]: https://www.univ-guyane.fr
 [Greenstone]: http://www.greenstone.org
 [Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
