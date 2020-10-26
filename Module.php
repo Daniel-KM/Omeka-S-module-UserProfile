@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace UserProfile;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
@@ -8,9 +8,6 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 }
 
 use Generic\AbstractModule;
-use Omeka\Api\Representation\UserRepresentation;
-use Omeka\Module\Exception\ModuleCannotInstallException;
-use Omeka\Stdlib\Message;
 use Laminas\Config\Reader\Ini as IniReader;
 use Laminas\Config\Reader\Json as JsonReader;
 use Laminas\Config\Reader\Xml as XmlReader;
@@ -18,12 +15,15 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Api\Representation\UserRepresentation;
+use Omeka\Module\Exception\ModuleCannotInstallException;
+use Omeka\Stdlib\Message;
 
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    public function preInstall()
+    public function preInstall(): void
     {
         $services = $this->getServiceLocator();
         $module = $services->get('Omeka\ModuleManager')->getModule('Generic');
@@ -36,7 +36,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         $sharedEventManager->attach(
             \Omeka\Api\Representation\UserRepresentation::class,
@@ -97,7 +97,7 @@ class Module extends AbstractModule
         return true;
     }
 
-    protected function updateListFields()
+    protected function updateListFields(): void
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
@@ -116,7 +116,7 @@ class Module extends AbstractModule
         $settings->set('userprofile_fields', $fields);
     }
 
-    public function handleUserSettings(Event $event)
+    public function handleUserSettings(Event $event): void
     {
         // Compatibility with module Guest.
         $services = $this->getServiceLocator();
@@ -194,7 +194,7 @@ class Module extends AbstractModule
         return $form;
     }
 
-    public function filterResourceJsonUser(Event $event)
+    public function filterResourceJsonUser(Event $event): void
     {
         $user = $event->getTarget();
         $jsonLd = $event->getParam('jsonLd');
@@ -216,7 +216,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function apiCreatePreUser(Event $event)
+    public function apiCreatePreUser(Event $event): void
     {
         /** @var \Omeka\Mvc\Status $status */
         $services = $this->getServiceLocator();
@@ -240,7 +240,7 @@ class Module extends AbstractModule
         // $this->checkRequest($request);
     }
 
-    public function apiHydratePreUser(Event $event)
+    public function apiHydratePreUser(Event $event): void
     {
         $services = $this->getServiceLocator();
 
@@ -254,7 +254,7 @@ class Module extends AbstractModule
         $this->checkRequest($event);
     }
 
-    protected function checkRequest(Event $event)
+    protected function checkRequest(Event $event): void
     {
         // TODO Manage "required" during create and update.
 
@@ -357,7 +357,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function apiCreatePostUser(Event $event)
+    public function apiCreatePostUser(Event $event): void
     {
         /** @var \Omeka\Mvc\Status $status */
         $services = $this->getServiceLocator();
@@ -383,7 +383,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function apiUpdatePostUser(Event $event)
+    public function apiUpdatePostUser(Event $event): void
     {
         // Only for the rest api manager: in public or admin, the view is
         // reloaded and managed during the creation of the form.
@@ -397,7 +397,7 @@ class Module extends AbstractModule
         $this->apiCreateOrUpdatePostUser($event);
     }
 
-    protected function apiCreateOrUpdatePostUser(Event $event)
+    protected function apiCreateOrUpdatePostUser(Event $event): void
     {
         // Only if the request has settings.
         /** @var \Omeka\Api\Request $request */
@@ -464,21 +464,21 @@ class Module extends AbstractModule
             ->get('user-settings');
     }
 
-    public function viewUserDetails(Event $event)
+    public function viewUserDetails(Event $event): void
     {
         $view = $event->getTarget();
         $user = $view->resource;
         $this->viewUserData($view, $user, 'common/admin/user-profile');
     }
 
-    public function viewUserShowAfter(Event $event)
+    public function viewUserShowAfter(Event $event): void
     {
         $view = $event->getTarget();
         $user = $view->vars()->user;
         $this->viewUserData($view, $user, 'common/admin/user-profile-list');
     }
 
-    protected function viewUserData(PhpRenderer $view, UserRepresentation $user, $partial)
+    protected function viewUserData(PhpRenderer $view, UserRepresentation $user, $partial): void
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');

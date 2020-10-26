@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace UserProfile\Form;
 
 use Laminas\Form\Fieldset;
@@ -10,7 +10,7 @@ class UserSettingsFieldset extends Fieldset
      */
     protected $label = 'User Profile'; // @translate
 
-    public function init()
+    public function init(): void
     {
     }
 }
