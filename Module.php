@@ -11,13 +11,13 @@ use Generic\AbstractModule;
 use Omeka\Api\Representation\UserRepresentation;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Omeka\Stdlib\Message;
-use Zend\Config\Reader\Ini as IniReader;
-use Zend\Config\Reader\Json as JsonReader;
-use Zend\Config\Reader\Xml as XmlReader;
-use Zend\EventManager\Event;
-use Zend\EventManager\SharedEventManagerInterface;
-use Zend\Mvc\Controller\AbstractController;
-use Zend\View\Renderer\PhpRenderer;
+use Laminas\Config\Reader\Ini as IniReader;
+use Laminas\Config\Reader\Json as JsonReader;
+use Laminas\Config\Reader\Xml as XmlReader;
+use Laminas\EventManager\Event;
+use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Mvc\Controller\AbstractController;
+use Laminas\View\Renderer\PhpRenderer;
 
 class Module extends AbstractModule
 {
@@ -123,7 +123,7 @@ class Module extends AbstractModule
         /** @var \Omeka\Mvc\Status $status */
         $status = $services->get('Omeka\Status');
         if ($status->isSiteRequest()) {
-            /** @var \Zend\Router\Http\RouteMatch $routeMatch */
+            /** @var \Laminas\Router\Http\RouteMatch $routeMatch */
             $routeMatch = $services->get('Application')->getMvcEvent()->getRouteMatch();
             $controller = $routeMatch->getParam('controller');
             if ($controller === \Guest\Controller\Site\AnonymousController::class) {
@@ -176,9 +176,9 @@ class Module extends AbstractModule
         // @see \Omeka\Controller\SiteAdmin\IndexController::themeSettingsAction()
         $inputFilter = $form->getInputFilter()->get('user-settings');
         foreach ($formFieldset->getElements() as $element) {
-            if ($element instanceof \Zend\Form\Element\MultiCheckbox
-                || $element instanceof \Zend\Form\Element\Tel
-                || ($element instanceof \Zend\Form\Element\Select
+            if ($element instanceof \Laminas\Form\Element\MultiCheckbox
+                || $element instanceof \Laminas\Form\Element\Tel
+                || ($element instanceof \Laminas\Form\Element\Select
                     && $element->getOption('empty_option') !== null)
             ) {
                 if (!$element->getAttribute('required')) {
@@ -225,7 +225,7 @@ class Module extends AbstractModule
             return;
         }
 
-        /** @var \Zend\Http\PhpEnvironment\Request $request */
+        /** @var \Laminas\Http\PhpEnvironment\Request $request */
         $request = $services->get('Request');
         $post = $request->getPost();
         $userSettings = $post->offsetGet('user-settings') ?: [];
@@ -284,7 +284,7 @@ class Module extends AbstractModule
             }
 
             // TODO Use the validator of the element.
-            /** @var \Zend\Form\Element $element */
+            /** @var \Laminas\Form\Element $element */
             $element = $fieldset->get($key);
             $isMultipleValues = is_array($value);
 
@@ -340,7 +340,7 @@ class Module extends AbstractModule
                 }
             } else {
                 if (method_exists($element, 'isMultiple') && $element->isMultiple()
-                    || $element instanceof \Zend\Form\Element\MultiCheckbox
+                    || $element instanceof \Laminas\Form\Element\MultiCheckbox
                 ) {
                     $errorStore->addError('o:setting', new Message(
                         'An array of values is required for “%s”.', // @translate
@@ -363,7 +363,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $status = $services->get('Omeka\Status');
         if (!$status->isApiRequest()) {
-            /** @var \Zend\Http\PhpEnvironment\Request $request */
+            /** @var \Laminas\Http\PhpEnvironment\Request $request */
             $request = $services->get('Request');
             $post = $request->getPost();
             $userSettings = $post->offsetGet('user-settings') ?: [];
@@ -421,7 +421,7 @@ class Module extends AbstractModule
             }
 
             // TODO Use the validator of the element.
-            /** @var \Zend\Form\Element $element */
+            /** @var \Laminas\Form\Element $element */
             $element = $fieldset->get($key);
             $isMultipleValues = is_array($value);
 
@@ -429,9 +429,9 @@ class Module extends AbstractModule
             // during creation via form.
             if (method_exists($element, 'getValueOptions') && $isMultipleValues) {
                 $value = array_keys(array_intersect_key($element->getValueOptions(), array_flip($value)));
-            } elseif ($element instanceof \Zend\Form\Element\Checkbox) {
+            } elseif ($element instanceof \Laminas\Form\Element\Checkbox) {
                 $value = (bool) $value;
-            } elseif ($element instanceof \Zend\Form\Element\Number) {
+            } elseif ($element instanceof \Laminas\Form\Element\Number) {
                 $value = (int) $value;
             }
 
@@ -443,7 +443,7 @@ class Module extends AbstractModule
      * Get the fieldset "user-setting" of the user form.
      *
      * @param int $userId
-     * @return \Zend\Form\Fieldset
+     * @return \Laminas\Form\Fieldset
      */
     protected function userSettingsFieldset($userId = null)
     {
@@ -515,7 +515,7 @@ class Module extends AbstractModule
             if ($config && count($config['elements'])) {
                 return $config;
             }
-        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
         try {
@@ -524,7 +524,7 @@ class Module extends AbstractModule
             if ($config && count($config)) {
                 return ['elements' => $config];
             }
-        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
         try {
@@ -533,7 +533,7 @@ class Module extends AbstractModule
             if ($config && count($config['elements'])) {
                 return $config;
             }
-        } catch (\Zend\Config\Exception\RuntimeException $e) {
+        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
         return ['elements' => []];

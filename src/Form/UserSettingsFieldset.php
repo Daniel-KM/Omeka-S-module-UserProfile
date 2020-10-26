@@ -1,7 +1,7 @@
 <?php
 namespace UserProfile\Form;
 
-use Zend\Form\Fieldset;
+use Laminas\Form\Fieldset;
 
 class UserSettingsFieldset extends Fieldset
 {
