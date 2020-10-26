@@ -171,13 +171,13 @@ your archives regularly so you can roll back if needed.
 Troubleshooting
 ---------------
 
-See online issues on the [module issues] page on GitHub.
+See online issues on the [module issues] page on GitLab.
 
 
 License
 -------
 
-This module is published under the [CeCILL v2.1] licence, compatible with
+This module is published under the [CeCILL v2.1] license, compatible with
 [GNU/GPL] and approved by [FSF] and [OSI].
 
 This software is governed by the CeCILL license under French law and abiding by
@@ -207,21 +207,21 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2020 (see [Daniel-KM] on GitHub)
+* Copyright Daniel Berthereau, 2019-2020 (see [Daniel-KM] on GitLab)
 
 This module is built on a development made for [Fondation Maison de Salins] and
 will be used for the future [digital library Manioc] of [Université des Antilles et de la Guyane],
 currently managed with [Greenstone].
 
 
-[User Profile]: https://github.com/Daniel-KM/Omeka-S-module-UserProfile
+[User Profile]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile
 [Omeka S]: https://omeka.org/s
-[Guest User]: https://github.com/Daniel-KM/Omeka-S-module-GuestUser
+[Guest User]: https://gitlab.com/Daniel-KM/Omeka-S-module-GuestUser
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
 [Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
 [api credential key]: https://omeka.org/s/docs/developer/api/rest_api/#authentication
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-UserProfile/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
@@ -232,4 +232,4 @@ currently managed with [Greenstone].
 [Université de la Guyane]: https://www.univ-guyane.fr
 [Greenstone]: http://www.greenstone.org
 [GitLab]: https://gitlab.com/Daniel-KM
-[Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
+[Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"

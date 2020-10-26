@@ -33,7 +33,7 @@ TXT;
                 'options' => [
                     'label' => 'List of fields (as xml, json, or ini)', // @translate
                     'info' => "List all input elements as xml, json or ini. It is recommended to prepend “userprofile_” to field names.", // @translate
-                    'documentation' => 'https://github.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
+                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
                 ],
                 'attributes' => [
                     'id' => 'userprofile_elements',
