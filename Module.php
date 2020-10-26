@@ -16,25 +16,11 @@ use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\UserRepresentation;
-use Omeka\Module\Exception\ModuleCannotInstallException;
 use Omeka\Stdlib\Message;
 
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
-
-    public function preInstall(): void
-    {
-        $services = $this->getServiceLocator();
-        $module = $services->get('Omeka\ModuleManager')->getModule('Generic');
-        if ($module && version_compare($module->getIni('version'), '3.0.20', '<')) {
-            $translator = $services->get('MvcTranslator');
-            $message = new Message($translator->translate('This module requires the module "%1$s" >= %2$s.'),
-                'Generic', '3.0.20'
-            );
-            throw new ModuleCannotInstallException($message);
-        }
-    }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
@@ -144,17 +130,17 @@ class Module extends AbstractModule
         }
     }
 
-    protected function handleAnySettings(Event $event, $settingsType)
+    protected function handleAnySettings(Event $event, $settingsType): ?\Laminas\Form\Fieldset
     {
         if ($settingsType !== 'user_settings') {
             return parent::handleAnySettings($event, $settingsType);
         }
 
-        $form = parent::handleAnySettings($event, $settingsType);
+        $form = $event->getTarget();
+        $formFieldset = parent::handleAnySettings($event, $settingsType);
 
         // Specific to this module.
         $services = $this->getServiceLocator();
-        $formFieldset = $form->get('user-settings');
 
         $status = $services->get('Omeka\Status');
         $userExist = !$status->isApiRequest() || $status->getRouteMatch()->getParam('id');
@@ -499,7 +485,7 @@ class Module extends AbstractModule
         );
     }
 
-    protected function readConfigElements()
+    protected function readConfigElements(): array
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
