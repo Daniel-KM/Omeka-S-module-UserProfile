@@ -210,13 +210,14 @@ Copyright
 * Copyright Daniel Berthereau, 2019-2020 (see [Daniel-KM] on GitLab)
 
 This module is built on a development made for [Fondation Maison de Salins] and
-will be used for the future [digital library Manioc] of [Université des Antilles et de la Guyane],
-currently managed with [Greenstone].
+will be used for the future [digital library Manioc] of [Université des Antilles]
+et [Université de la Guyane], currently managed with [Greenstone].
 
 
 [User Profile]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile
 [Omeka S]: https://omeka.org/s
-[Guest User]: https://gitlab.com/Daniel-KM/Omeka-S-module-GuestUser
+[Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
+[Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
 [Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
