@@ -142,19 +142,23 @@ class Module extends AbstractModule
         // Specific to this module.
         $services = $this->getServiceLocator();
 
-        $status = $services->get('Omeka\Status');
-        $userExist = !$status->isApiRequest() || $status->getRouteMatch()->getParam('id');
-        $userSettings = $userExist
+        // These settings can be managed in admin or via guest.
+        // The user may be created or not yet.
+        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+        $userSettings = $user
             ? $services->get('Omeka\Settings\User')
             : null;
 
         $elements = $this->readConfigElements();
         if ($elements) {
             foreach ($elements['elements'] as $name => $element) {
-                $data[$name] = $userExist ? $userSettings->get($name) : null;
+                $data[$name] = $userSettings ? $userSettings->get($name) : null;
                 $formFieldset
-                    ->add($element)
-                    ->get($name)->setValue($data[$name]);
+                    ->add($element);
+                if ($userSettings) {
+                    $formFieldset
+                        ->get($name)->setValue($data[$name]);
+                }
             }
         }
 
