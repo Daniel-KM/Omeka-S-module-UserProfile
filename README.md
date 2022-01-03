@@ -208,7 +208,7 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2020 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2022 (see [Daniel-KM] on GitLab)
 
 This module is built on a development made for [Fondation Maison de Salins] and
 will be used for the future [digital library Manioc] of [Université des Antilles]
