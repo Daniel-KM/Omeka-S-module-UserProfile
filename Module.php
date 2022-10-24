@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace UserProfile;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
@@ -189,13 +190,25 @@ class Module extends AbstractModule
         $user = $event->getTarget();
         $jsonLd = $event->getParam('jsonLd');
 
-        $userSettings = $this->getServiceLocator()->get('Omeka\Settings\User');
-        $userSettings->setTargetId($user->id());
-        $fieldset = $this->userSettingsFieldset($user->id());
+        $services = $this->getServiceLocator();
 
-        foreach ($fieldset->getElements() as $element) {
-            $key = $element->getName();
-            $jsonLd['o:setting'][$key] = $userSettings->get($key);
+        $settings = $services->get('Omeka\Settings');
+        $elements = $settings->get('userprofile_elements', '');
+        if (!$elements) {
+            return;
+        }
+
+        $fields = $settings->get('userprofile_fields', []);
+        if (!$fields) {
+            return;
+        }
+
+        $userSettings = $services->get('Omeka\Settings\User');
+        $userSettings->setTargetId($user->id());
+
+        foreach (array_keys($fields) as $field) {
+            $value = $userSettings->get($field);
+            $jsonLd['o:setting'][$field] = $value;
         }
 
         $event->setParam('jsonLd', $jsonLd);
