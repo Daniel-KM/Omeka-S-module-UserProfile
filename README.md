@@ -160,6 +160,12 @@ Note that you need an [api credential key] to create, read, update, and delete a
 user.
 
 
+TODO
+----
+
+- [ ] Use the form validator in order to check any element.
+
+
 Warning
 -------
 
