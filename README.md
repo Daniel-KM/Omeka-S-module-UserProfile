@@ -36,10 +36,10 @@ fields with a name, a type, attributes and options. Three formats are allowed:
 See an example in [Omeka themes].
 
 ```ini
-elements.userprofile_phone.name          = "userprofile_phone"
-elements.userprofile_phone.type          = "Tel"
-elements.userprofile_phone.options.label = "Phone"
-elements.userprofile_phone.attributes.id = "userprofile_phone"
+elements.userprofile_phone.name                                 = "userprofile_phone"
+elements.userprofile_phone.type                                 = "Tel"
+elements.userprofile_phone.options.label                        = "Phone"
+elements.userprofile_phone.attributes.id                        = "userprofile_phone"
 
 elements.userprofile_organisation.name                          = "userprofile_organisation"
 elements.userprofile_organisation.type                          = "Select"
@@ -214,7 +214,7 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2022 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2023 (see [Daniel-KM] on GitLab)
 
 This module is built on a development made for [Fondation Maison de Salins] and
 will be used for the future [digital library Manioc] of [Université des Antilles]
@@ -225,7 +225,7 @@ et [Université de la Guyane], currently managed with [Greenstone].
 [Omeka S]: https://omeka.org/s
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
-[Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
+[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
 [api credential key]: https://omeka.org/s/docs/developer/api/rest_api/#authentication
