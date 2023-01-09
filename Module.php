@@ -137,6 +137,11 @@ class Module extends AbstractModule
             return parent::handleAnySettings($event, $settingsType);
         }
 
+        $elements = $this->readConfigElements();
+        if (!$elements) {
+            return null;
+        }
+
         $form = $event->getTarget();
         $formFieldset = parent::handleAnySettings($event, $settingsType);
 
@@ -150,10 +155,22 @@ class Module extends AbstractModule
             ? $services->get('Omeka\Settings\User')
             : null;
 
-        $elements = $this->readConfigElements();
+        $isV4 = version_compare(\Omeka\Module::VERSION, '4', '>=');
+
+        if ($isV4) {
+            $elementGroups = [
+                'profile' => 'Profile', // @translate
+            ];
+            $userSettingsFieldset = $form->get('user-settings');
+            $userSettingsFieldset->setOption('element_groups', array_merge($userSettingsFieldset->getOption('element_groups') ?: [], $elementGroups));
+        }
+
         if ($elements) {
             foreach ($elements['elements'] as $name => $element) {
                 $data[$name] = $userSettings ? $userSettings->get($name) : null;
+                if ($isV4 && empty($element['options']['element_group'])) {
+                    $element['options']['element_group'] = 'profile';
+                }
                 $formFieldset
                     ->add($element);
                 if ($userSettings) {
