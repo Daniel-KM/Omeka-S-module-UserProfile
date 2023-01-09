@@ -6,10 +6,19 @@
  * @var array $fields
  */
 
-$translate = $this->plugin('translate');
+// Like show-details.
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
 ?>
 
 <style>
+.value.user-profile .value {
+    display: initial;
+    padding: 0;
+    vertical-align: initial;
+}
 .value.user-profile .value + .value.user-profile .value:before {
     content: '; ';
 }
@@ -24,7 +33,7 @@ $translate = $this->plugin('translate');
             <?php $values = $userSettings->get($field); ?>
             <?php if (!is_array($values)) $values = [$values]; ?>
             <?php foreach ($values as $value): ?>
-            <span class="value"><?= $value ?></span>
+            <span class="value"><?= $escape($value) ?></span>
             <?php endforeach; ?>
         </div>
         <?php endforeach; ?>

@@ -6,7 +6,11 @@
  * @var array $fields
  */
 
-$translate = $this->plugin('translate');
+// Like show.
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
 ?>
 
 <style>
@@ -15,20 +19,22 @@ $translate = $this->plugin('translate');
 }
 </style>
 
-<div class="property user-profile">
-    <h4><?= $translate('User profile') ?></h4>
-    <div class="value user-profile">
-        <ul class="user-profile">
-            <?php foreach ($fields as $field => $label): ?>
-            <li>
-                <span class="profile-field"><?= $translate($label) ?>:</span>
-                <?php $values = $userSettings->get($field); ?>
-                <?php if (!is_array($values)) $values = [$values]; ?>
-                <?php foreach ($values as $value): ?>
-                <span class="value"><?= $value ?></span>
+<dl>
+    <div class="property user-profile">
+        <dt><?= $translate('User profile') ?></dt>
+        <dd class="value user-profile">
+            <ul class="user-profile">
+                <?php foreach ($fields as $field => $label): ?>
+                <li>
+                    <span class="profile-field"><?= $translate($label) ?>:</span>
+                    <?php $values = $userSettings->get($field); ?>
+                    <?php if (!is_array($values)) $values = [$values]; ?>
+                    <?php foreach ($values as $value): ?>
+                    <span class="value"><?= $escape($value) ?></span>
+                    <?php endforeach; ?>
+                </li>
                 <?php endforeach; ?>
-            </li>
-            <?php endforeach; ?>
-        </ul>
+            </ul>
+        </dd>
     </div>
-</div>
+</dl>
