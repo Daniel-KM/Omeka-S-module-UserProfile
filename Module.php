@@ -150,10 +150,18 @@ class Module extends AbstractModule
 
         // These settings can be managed in admin or via guest.
         // The user may be created or not yet.
+        /**
+         * @var \Omeka\Entity\User $user
+         * @var \Omeka\Settings\UserSettings $userSettings
+         */
         $user = $services->get('Omeka\AuthenticationService')->getIdentity();
-        $userSettings = $user
-            ? $services->get('Omeka\Settings\User')
-            : null;
+        if ($user) {
+            // In some cases (api), the user may not have been set.
+            $userSettings = $services->get('Omeka\Settings\User');
+            $userSettings->setTargetId($user->getId());
+        } else {
+            $userSettings = null;
+        }
 
         $isV4 = version_compare(\Omeka\Module::VERSION, '4', '>=');
 
