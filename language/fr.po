@@ -1,0 +1,123 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-06 00:00+0000\n"
+"PO-Revision-Date: 2023-02-06 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
+#: src/Generic/AbstractModule.php:861
+#, php-format
+msgid "This module requires the module \"%s\"."
+msgstr "Ce module requiert le module « %s »."
+
+#: src/Generic/AbstractModule.php:93
+#, php-format
+msgid "This module requires modules \"%s\"."
+msgstr "Ce module requiert les modules « %s »."
+
+#: src/Generic/AbstractModule.php:101
+msgid "This module has resources that cannot be installed."
+msgstr "Ce module a des ressources qui ne peuvent pas être installées."
+
+#: src/Generic/AbstractModule.php:108
+msgid ""
+"This module cannot install its tables, because they exist already. Try to "
+"remove them first."
+msgstr ""
+"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
+"de les supprimer manuellement."
+
+#: src/Generic/AbstractModule.php:369
+#, php-format
+msgid "The module removed tables \"%s\" from a previous broken install."
+msgstr ""
+"Le module a supprimé les tables « %s » depuis une installation échouée."
+
+#: src/Generic/AbstractModule.php:856
+#, php-format
+msgid "This module requires the module \"%1$s\", version %2$s or above."
+msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
+
+#: src/Generic/AbstractModule.php:953
+#, php-format
+msgid ""
+"The module \"%s\" was automatically deactivated because the dependencies are "
+"unavailable."
+msgstr ""
+"Le module \"%s\" a été automatiquement désactivé car ses dépendances ne sont "
+"plus disponibles."
+
+#: view/common/admin/user-profile-list.phtml:24
+#: view/common/admin/user-profile.phtml:28
+msgid "User profile"
+msgstr "Profil utilisateur"
+
+#: Module.php:188 src/Form/UserSettingsFieldset.php:15
+msgid "Profile"
+msgstr "Un tableau de valeurs est nécessaire pour « %s »"
+
+#: Module.php:329
+msgid "The key “o:setting” should be an array of user settings."
+msgstr "La clé « o:setting » doit être un tableau de paramètres utilisateur."
+
+#: Module.php:348 Module.php:382
+#, php-format
+msgid "A value is required for “%s”."
+msgstr "Une valeur est nécessaire pour « %s »."
+
+#: Module.php:372
+#, php-format
+msgid "Only one value is allowed for “%s”."
+msgstr "Une seule valeur est possible pour « %s »."
+
+#: Module.php:377
+#, php-format
+msgid "One or more values (“%s”) are not allowed for “%s”."
+msgstr "Une ou plusieurs valeurs (« %s ») ne sont pas autorisées pour « %s »."
+
+#: Module.php:389 Module.php:404
+#, php-format
+msgid "The value “%s” is not allowed for “%s”."
+msgstr "La valeur « %s » n’est pas autorisée pour « %s »."
+
+#: Module.php:399
+#, php-format
+msgid "An array of values is required for “%s”."
+msgstr "Un tableau de valeurs est nécessaire pour « %s »."
+
+#: src/Form/ConfigForm.php:35
+msgid "List of fields (as xml, json, or ini)"
+msgstr "Liste des champs (en xml, json ou ini)"
+
+#: src/Form/ConfigForm.php:36
+msgid ""
+"List all input elements as xml, json or ini. It is recommended to prepend "
+"“userprofile_” to field names."
+msgstr ""
+"Lister tous les champs d’entrées en xml, json ou ini. Il est recommandé de "
+"préfixer les noms de champ avec « userprofile_ »."
+
+#: src/Form/UserSettingsFieldset.php:12
+msgid "User Profile"
+msgstr "Profil utilisateur"
+
+#: data/scripts/upgrade.php:30
+msgid ""
+"It is now possible to remove values from guest form and to hide them in "
+"admin form."
+msgstr ""
+"Il est désormais possible de supprimer des valeurs des formulaires ou de les "
+"cacher."
