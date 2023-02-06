@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace UserProfile\Form;
 
 use Laminas\Form\Element;
@@ -32,7 +33,7 @@ TXT;
                 'type' => Element\Textarea::class,
                 'options' => [
                     'label' => 'List of fields (as xml, json, or ini)', // @translate
-                    'info' => "List all input elements as xml, json or ini. It is recommended to prepend “userprofile_” to field names.", // @translate
+                    'info' => 'List all input elements as xml, json or ini. It is recommended to prepend “userprofile_” to field names.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
                 ],
                 'attributes' => [

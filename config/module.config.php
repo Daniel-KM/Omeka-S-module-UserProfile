@@ -26,9 +26,14 @@ return [
     'userprofile' => [
         'config' => [
             'userprofile_elements' => '',
-            // Hidden parameter that contains the list of field names and labels
-            // for quicker process.
+            // Hidden parameters
+            // Contains the list of field names and labels for quicker process.
             'userprofile_fields' => [],
+            // Contains the list of field to exclude for quicker process.
+            'userprofile_exclude' => [
+                'admin' => ['edit' => []],
+                'public' => ['edit' => []],
+            ],
         ],
         // Keep key to simplify process.
         'user_settings' => [

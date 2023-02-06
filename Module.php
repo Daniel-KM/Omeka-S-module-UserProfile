@@ -92,6 +92,10 @@ class Module extends AbstractModule
         $fieldsConfig = $this->readConfigElements();
 
         $fields = [];
+        $exclude = [
+            'admin' => ['show' => [], 'edit' => []],
+            'public' => ['show' => [], 'edit' => []],
+        ];
         foreach ($fieldsConfig['elements'] as $element) {
             if (!isset($element['name'])) {
                 continue;
@@ -99,8 +103,22 @@ class Module extends AbstractModule
             $fields[$element['name']] = empty($element['options']['label'])
                 ? $element['name']
                 : $element['options']['label'];
+            if (!empty($element['options']['exclude_admin_show'])) {
+                $exclude['admin']['show'] = $element['name'];
+            }
+            if (!empty($element['options']['exclude_admin_edit'])) {
+                $exclude['admin']['edit'] = $element['name'];
+            }
+            if (!empty($element['options']['exclude_public_show'])) {
+                $exclude['public']['show'] = $element['name'];
+            }
+            if (!empty($element['options']['exclude_public_edit'])) {
+                $exclude['public']['edit'] = $element['name'];
+            }
         }
+
         $settings->set('userprofile_fields', $fields);
+        $settings->set('userprofile_exclude', $exclude);
     }
 
     public function handleUserSettings(Event $event): void
@@ -163,12 +181,17 @@ class Module extends AbstractModule
             $userSettings = null;
         }
 
+        $exclude = $this->excludedFields('edit');
+
         // In Omeka S < v4, the element groups are skipped.
         $elementGroups = [
             'profile' => 'Profile', // @translate
         ];
 
         foreach ($elements['elements'] as $name => $element) {
+            if (in_array($name, $exclude)) {
+                continue;
+            }
             $data[$name] = $userSettings ? $userSettings->get($name) : null;
             if (empty($element['options']['element_group'])) {
                 $element['options']['element_group'] = 'profile';
@@ -196,9 +219,12 @@ class Module extends AbstractModule
                 || ($element instanceof \Laminas\Form\Element\Select
                     && $element->getOption('empty_option') !== null)
             ) {
-                if (!$element->getAttribute('required')) {
+                $name = $element->getName();
+                if (!in_array($name, $exclude)
+                    && !$element->getAttribute('required')
+                ) {
                     $inputFilter->add([
-                        'name' => $element->getName(),
+                        'name' => $name,
                         'allow_empty' => true,
                         'required' => false,
                     ]);
@@ -441,9 +467,16 @@ class Module extends AbstractModule
         $userSettings->setTargetId($user->getId());
         $fieldset = $this->userSettingsFieldset($user->getId());
 
+        $exclude = $this->excludedFields('edit');
+
         foreach ($requestUserSettings as $key => $value) {
             // Silently skip if not exist for security and clean process.
             if (!$fieldset->has($key)) {
+                continue;
+            }
+
+            // Skip elements for security: a user cannot edit an excluded field.
+            if (in_array($key, $exclude)) {
                 continue;
             }
 
@@ -514,6 +547,10 @@ class Module extends AbstractModule
             return;
         }
 
+        $fields = $settings->get('userprofile_fields', []) ?: [];
+        $exclude = $this->excludedFields('show');
+        $fields = array_intersect_key($fields, array_flip($exclude));
+
         $userSettings = $services->get('Omeka\Settings\User');
         $userSettings->setTargetId($user->id());
         echo $view->partial(
@@ -521,7 +558,7 @@ class Module extends AbstractModule
             [
                 'user' => $user,
                 'userSettings' => $userSettings,
-                'fields' => $settings->get('userprofile_fields', []),
+                'fields' => $fields,
             ]
         );
     }
@@ -564,5 +601,25 @@ class Module extends AbstractModule
         }
 
         return ['elements' => []];
+    }
+
+    protected function excludedFields(string $part): array
+    {
+        /** @var \Omeka\Mvc\Status $status */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+        $isSiteRequest = $status->isSiteRequest();
+        $isAdminRequest = $status->isAdminRequest();
+        if ($isSiteRequest || $isAdminRequest) {
+            $settings = $services->get('Omeka\Settings');
+            $exclude = $settings->get('userprofile_exclude', ['admin' => [$part => []], 'public' => [$part => []]]);
+            $exclude = $exclude[$isSiteRequest ? 'public' : 'admin'][$part] ?? [];
+            if (!is_array($exclude)) {
+                $exclude = [];
+            }
+        } else {
+            $exclude = [];
+        }
+        return $exclude;
     }
 }
