@@ -38,11 +38,13 @@ See an example in [Omeka themes].
 ```ini
 elements.userprofile_phone.name                                 = "userprofile_phone"
 elements.userprofile_phone.type                                 = "Tel"
+elements.userprofile_phone.options.element_group                = "profile"
 elements.userprofile_phone.options.label                        = "Phone"
 elements.userprofile_phone.attributes.id                        = "userprofile_phone"
 
 elements.userprofile_organisation.name                          = "userprofile_organisation"
 elements.userprofile_organisation.type                          = "Select"
+elements.userprofile_organisation.options.element_group         = "profile"
 elements.userprofile_organisation.options.label                 = "Organisation"
 elements.userprofile_organisation.options.empty_option          = ""
 elements.userprofile_organisation.options.value_options.none    = "None"
@@ -62,6 +64,7 @@ elements.userprofile_organisation.attributes.data-placeholder   = "Select an org
         <name>userprofile_phone</name>
         <type>Tel</type>
         <options>
+            <element_group>profile</element_group>
             <label>Phone</label>
         </options>
         <attributes>
@@ -73,6 +76,7 @@ elements.userprofile_organisation.attributes.data-placeholder   = "Select an org
         <name>userprofile_organisation</name>
         <type>Select</type>
         <options>
+            <element_group>profile</element_group>
             <label>Organisation</label>
             <empty_option></empty_option>
             <value_options>
@@ -110,6 +114,7 @@ elements.userprofile_organisation.attributes.data-placeholder   = "Select an org
             "name": "userprofile_phone",
             "type": "Tel",
             "options": {
+                "element_group": "profile",
                 "label": "Phone"
             },
             "attributes": {
@@ -121,6 +126,7 @@ elements.userprofile_organisation.attributes.data-placeholder   = "Select an org
             "name": "userprofile_organisation",
             "type": "Select",
             "options": {
+                "element_group": "profile",
                 "label": "Organisation",
                 "empty_option": "",
                 "value_options": {
@@ -147,6 +153,8 @@ the vertical apostrophe “`'`”. You can replace the last by a real apostrophe
 or `json`. With xml, the keys cannot contains space, greater/lower, single and
 double quote. With json, it must be well formed, in particular without trailing
 comma `,` on last key of each group.
+
+The option "element_group" = "profile" is used by Omeka S v4.
 
 ### Rest api
 

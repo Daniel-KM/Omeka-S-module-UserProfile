@@ -26,7 +26,8 @@ return [
     'userprofile' => [
         'config' => [
             'userprofile_elements' => '',
-            // Hidden parameter that contains the list of field names and labels.
+            // Hidden parameter that contains the list of field names and labels
+            // for quicker process.
             'userprofile_fields' => [],
         ],
         // Keep key to simplify process.

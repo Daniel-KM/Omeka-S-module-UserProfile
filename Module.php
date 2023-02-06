@@ -163,30 +163,29 @@ class Module extends AbstractModule
             $userSettings = null;
         }
 
-        $isV4 = version_compare(\Omeka\Module::VERSION, '4', '>=');
+        // In Omeka S < v4, the element groups are skipped.
+        $elementGroups = [
+            'profile' => 'Profile', // @translate
+        ];
 
-        if ($isV4) {
-            $elementGroups = [
-                'profile' => 'Profile', // @translate
-            ];
-            $userSettingsFieldset = $form->get('user-settings');
-            $userSettingsFieldset->setOption('element_groups', array_merge($userSettingsFieldset->getOption('element_groups') ?: [], $elementGroups));
-        }
-
-        if ($elements) {
-            foreach ($elements['elements'] as $name => $element) {
-                $data[$name] = $userSettings ? $userSettings->get($name) : null;
-                if ($isV4 && empty($element['options']['element_group'])) {
-                    $element['options']['element_group'] = 'profile';
-                }
+        foreach ($elements['elements'] as $name => $element) {
+            $data[$name] = $userSettings ? $userSettings->get($name) : null;
+            if (empty($element['options']['element_group'])) {
+                $element['options']['element_group'] = 'profile';
+            } elseif (!isset($elementGroups[$element['options']['element_group']])) {
+                // The key is checked in order to keep default group labels.
+                $elementGroups[$element['options']['element_group']] = $element['options']['element_group'];
+            }
+            $formFieldset
+                ->add($element);
+            if ($userSettings) {
                 $formFieldset
-                    ->add($element);
-                if ($userSettings) {
-                    $formFieldset
-                        ->get($name)->setValue($data[$name]);
-                }
+                    ->get($name)->setValue($data[$name]);
             }
         }
+
+        $userSettingsFieldset = $form->get('user-settings');
+        $userSettingsFieldset->setOption('element_groups', array_merge($userSettingsFieldset->getOption('element_groups') ?: [], $elementGroups));
 
         // Fix to manage empty values for selects and multicheckboxes.
         // @see \Omeka\Controller\SiteAdmin\IndexController::themeSettingsAction()
