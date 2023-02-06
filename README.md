@@ -28,8 +28,37 @@ Usage
 
 The fields are added via the config form of the module. The main option creates
 a [Zend/Laminas form], so the the options are the one used to create html input
-fields with a name, a type, attributes and options. Three formats are allowed:
-`ini`, `xml`, or `json`.
+fields with a name, a type, attributes and options.
+
+There are some specific option keys for each element:
+- `exclude_admin_show` (default: `false`)
+  Don't display the value in the admin user board.
+- `exclude_admin_edit` (default: `false`)
+  Forbid user to edit the value and don't append the element to the admin user
+  form.
+  When an element is not available in public or admin form, it's still available
+  via api and settings and can be used to store any data.
+- `exclude_public_show` (default: `false`)
+  Don't display the value in the public user board (module Guest).
+- `exclude_public_edit` (default: `false`)
+  Forbid guest user to edit the value and don't append the element to the public
+  user form (module Guest).
+- `element_group` (default: `profile`)
+  It is used by Omeka S v4 and allows to create fieldsets. You can create any
+  dynamic groups you want. The default is `profile` so you don't need to set it.
+
+Three formats are allowed: `ini`, `xml`, or `json`. Each format has pros and
+cons. The format `ini` is more readable, `xml` is designed for experts and `json`
+is more common.
+
+The main point to check are the keys, but as long as you use standard keys, it's
+not an issue. With the format `ini`, two characters are forbidden in keys : the
+dot "`.`"  and the vertical apostrophe “`'`”. You can replace the last by a real
+apostrophe “`’`” instead, but you cannot replace the dot. In that case, use
+formats `xml` or `json`. With xml, the keys cannot contains space, greater sign
+`>`, lower sign `<`, single `'` and double quote `"`". With json, some
+characters should be escaped, and the data must be well formed, in particular
+without trailing comma `,` on last key of each group.
 
 - `ini`
 
@@ -146,15 +175,6 @@ elements.userprofile_organisation.attributes.data-placeholder   = "Select an org
 }
 ```
 
-Each format has pros and cons. The main point to check are the keys.
-With the format `ini`, two characters are forbidden in keys : the dot "`.`"  and
-the vertical apostrophe “`'`”. You can replace the last by a real apostrophe
-“`’`” instead, but you cannot replace the dot. In that case, use format `xml`
-or `json`. With xml, the keys cannot contains space, greater/lower, single and
-double quote. With json, it must be well formed, in particular without trailing
-comma `,` on last key of each group.
-
-The option "element_group" = "profile" is used by Omeka S v4.
 
 ### Rest api
 
@@ -164,14 +184,15 @@ For rest api, use something like:
 curl --data '{"o:email":"test.0001@test.com","o:name":"Test 0001","o:role":"researcher","o:is_active":true,"o:setting":{"locale":"fr","default_resource_template":"","userprofile_organisation":"Alpha"}}' --header "Content-Type: application/json" 'https://example.org/api/users?key_identity=xxx&key_credential=yyy'
 ```
 
-Note that you need an [api credential key] to create, read, update, and delete a
-user.
+Note that you need an [api credential key] to create, read, update, and delete
+user data.
 
 
 TODO
 ----
 
 - [ ] Use the form validator in order to check any element.
+- [x] In v4, allows to create dynamic group.
 
 
 Warning
