@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-06 00:00+0000\n"
+"POT-Creation-Date: 2023-05-08 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
-#: src/Generic/AbstractModule.php:861
+#: src/Generic/AbstractModule.php:890
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr ""
@@ -38,17 +38,17 @@ msgid ""
 "remove them first."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:369
+#: src/Generic/AbstractModule.php:398
 #, php-format
 msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:856
+#: src/Generic/AbstractModule.php:885
 #, php-format
 msgid "This module requires the module \"%1$s\", version %2$s or above."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:953
+#: src/Generic/AbstractModule.php:982
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
@@ -58,6 +58,12 @@ msgstr ""
 #: view/common/admin/user-profile-list.phtml:24
 #: view/common/admin/user-profile.phtml:28
 msgid "User profile"
+msgstr ""
+
+#: data/scripts/upgrade.php:30
+msgid ""
+"It is now possible to remove values from guest form and to hide them in "
+"admin form."
 msgstr ""
 
 #: Module.php:188 src/Form/UserSettingsFieldset.php:15
@@ -105,10 +111,4 @@ msgstr ""
 
 #: src/Form/UserSettingsFieldset.php:12
 msgid "User Profile"
-msgstr ""
-
-#: data/scripts/upgrade.php:30
-msgid ""
-"It is now possible to remove values from guest form and to hide them in "
-"admin form."
 msgstr ""
