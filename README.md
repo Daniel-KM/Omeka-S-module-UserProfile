@@ -47,6 +47,10 @@ There are some specific option keys for each element:
   It is used by Omeka S v4 and allows to create fieldsets. You can create any
   dynamic groups you want. The default is `profile` so you don't need to set it.
 
+If one of the element is a select of a list, it is recommended to use module
+[Table], that simplifies configuration and that allows to use the same table
+in different places.
+
 Three formats are allowed: `ini`, `xml`, or `json`. Each format has pros and
 cons. The format `ini` is more readable, `xml` is designed for experts and `json`
 is more common.
@@ -256,6 +260,7 @@ et [Université de la Guyane], currently managed with [Greenstone].
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
+[Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
 [api credential key]: https://omeka.org/s/docs/developer/api/rest_api/#authentication
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile/-/issues
