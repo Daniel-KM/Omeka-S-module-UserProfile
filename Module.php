@@ -561,8 +561,7 @@ class Module extends AbstractModule
 
         $fields = $settings->get('userprofile_fields', []) ?: [];
         $exclude = $this->excludedFields('show');
-        $fields = array_intersect_key($fields, array_flip($exclude));
-
+        $fields = array_diff_key($fields, array_flip($exclude));
         $userSettings = $services->get('Omeka\Settings\User');
         $userSettings->setTargetId($user->id());
         echo $view->partial(

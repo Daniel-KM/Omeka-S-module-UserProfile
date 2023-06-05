@@ -31,8 +31,8 @@ return [
             'userprofile_fields' => [],
             // Contains the list of field to exclude for quicker process.
             'userprofile_exclude' => [
-                'admin' => ['edit' => []],
-                'public' => ['edit' => []],
+                'admin' => ['show' => [], 'edit' => []],
+                'public' => ['show' => [], 'edit' => []],
             ],
         ],
         // Keep key to simplify process.
