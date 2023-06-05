@@ -166,17 +166,29 @@ class Module extends AbstractModule
         // Specific to this module.
         $services = $this->getServiceLocator();
 
-        // These settings can be managed in admin or via guest.
-        // The user may be created or not yet.
         /**
+         * These settings can be managed in admin or via guest.
+         * The user may be created or not yet.
+         * In admin, the user may not be the current user.
+         *
+         * @var \Omeka\Mvc\Status $status
          * @var \Omeka\Entity\User $user
          * @var \Omeka\Settings\UserSettings $userSettings
          */
-        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
-        if ($user) {
+        $status = $services->get('Omeka\Status');
+        $isAdminRequest = $status->isAdminRequest();
+        if ($isAdminRequest) {
+            $userId = (int) $status->getRouteParam('id') ?: null;
+        }
+        if (empty($userId)) {
+            $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+            $userId = $user ? $user->getId() : null;
+        }
+        // Rights to edit user settings is already checked.
+        if ($userId) {
             // In some cases (api), the user may not have been set.
             $userSettings = $services->get('Omeka\Settings\User');
-            $userSettings->setTargetId($user->getId());
+            $userSettings->setTargetId($userId);
         } else {
             $userSettings = null;
         }
