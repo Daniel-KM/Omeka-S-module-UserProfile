@@ -302,7 +302,7 @@ class Module extends AbstractModule
         $request->setContent($post->toArray());
 
         // TODO Check request from admin and guest form.
-        // $this->checkRequest($request);
+        // $this->checkApiRequest($request);
     }
 
     public function apiHydratePreUser(Event $event): void
@@ -316,10 +316,13 @@ class Module extends AbstractModule
             return;
         }
 
-        $this->checkRequest($event);
+        $this->checkApiRequest($event);
     }
 
-    protected function checkRequest(Event $event): void
+    /**
+     * Check an api request before hydration.
+     */
+    protected function checkApiRequest(Event $event): void
     {
         // TODO Manage "required" during create and update.
 
@@ -519,8 +522,11 @@ class Module extends AbstractModule
      */
     protected function userSettingsFieldset($userId = null)
     {
-        $form = $this->getServiceLocator()->get('FormElementManager')
+        $services = $this->getServiceLocator();
+        // $isSiteRequest = $services->get('Omeka\Status')->isSiteRequest();
+        $form = $services->get('FormElementManager')
             ->get(\Omeka\Form\UserForm::class, [
+                // 'is_public' => $isSiteRequest,
                 'user_id' => $userId,
                 'include_role' => true,
                 'include_admin_roles' => true,
