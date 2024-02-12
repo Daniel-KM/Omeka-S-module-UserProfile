@@ -1,14 +1,40 @@
 <?php declare(strict_types=1);
 
+/*
+ * Copyright 2019-2024 Daniel Berthereau
+ *
+ * This software is governed by the CeCILL license under French law and abiding
+ * by the rules of distribution of free software. You can use, modify and/or
+ * redistribute the software under the terms of the CeCILL license as circulated
+ * by CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and rights to copy, modify
+ * and redistribute granted by the license, users are provided only with a
+ * limited warranty and the software’s author, the holder of the economic
+ * rights, and the successive licensors have only limited liability.
+ *
+ * In this respect, the user’s attention is drawn to the risks associated with
+ * loading, using, modifying and/or developing or reproducing the software by
+ * the user in light of its specific status of free software, that may mean that
+ * it is complicated to manipulate, and that also therefore means that it is
+ * reserved for developers and experienced professionals having in-depth
+ * computer knowledge. Users are therefore encouraged to load and test the
+ * software’s suitability as regards their requirements in conditions enabling
+ * the security of their systems and/or data to be ensured and, more generally,
+ * to use and operate it in the same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
+ */
+
 namespace UserProfile;
 
-if (!class_exists(\Generic\AbstractModule::class)) {
-    require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
-        ? dirname(__DIR__) . '/Generic/AbstractModule.php'
-        : __DIR__ . '/src/Generic/AbstractModule.php';
+if (!class_exists(\Common\TraitModule::class)) {
+    require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
-use Generic\AbstractModule;
+use Common\Stdlib\PsrMessage;
+use Common\TraitModule;
 use Laminas\Config\Reader\Ini as IniReader;
 use Laminas\Config\Reader\Json as JsonReader;
 use Laminas\Config\Reader\Xml as XmlReader;
@@ -17,11 +43,31 @@ use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\UserRepresentation;
-use Omeka\Stdlib\Message;
+use Omeka\Module\AbstractModule;
 
 class Module extends AbstractModule
 {
+    use TraitModule;
+
     const NAMESPACE = __NAMESPACE__;
+
+    protected $dependencies = [
+        'Common',
+    ];
+
+    protected function preInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $translate = $services->get('ControllerPluginManager')->get('translate');
+
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.52')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Common', '3.4.52'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+    }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
@@ -76,7 +122,7 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
-        if (!parent::handleConfigForm($controller)) {
+        if (!$this->handleConfigFormAuto($controller)) {
             return false;
         }
 
@@ -124,12 +170,16 @@ class Module extends AbstractModule
     public function handleUserSettings(Event $event): void
     {
         // Compatibility with module Guest.
+
+        /**
+         * @var \Omeka\Mvc\Status $status
+         * @var \Laminas\Router\Http\RouteMatch $routeMatch
+         */
         $services = $this->getServiceLocator();
-        /** @var \Omeka\Mvc\Status $status */
         $status = $services->get('Omeka\Status');
+        $routeMatch = $services->get('Application')->getMvcEvent()->getRouteMatch();
         if ($status->isSiteRequest()) {
             /** @var \Laminas\Router\Http\RouteMatch $routeMatch */
-            $routeMatch = $services->get('Application')->getMvcEvent()->getRouteMatch();
             $controller = $routeMatch->getParam('controller');
             if ($controller === \Guest\Controller\Site\AnonymousController::class) {
                 if ($routeMatch->getParam('action') !== 'register') {
@@ -141,27 +191,29 @@ class Module extends AbstractModule
             } else {
                 return;
             }
-            $this->handleAnySettings($event, 'user_settings');
-        } elseif ($status->isApiRequest()) {
-            $this->handleAnySettings($event, 'user_settings');
+            $this->handleAnySettingsUser($event);
+        }
+        // Here, the upper method is overridden, so copy its content.
+        elseif ($status->isAdminRequest()) {
+            if (!in_array($routeMatch->getParam('controller'), ['Omeka\Controller\Admin\User', 'user'])) {
+                return;
+            }
+            $this->handleAnySettingsUser($event);
         } else {
-            parent::handleUserSettings($event);
+            $this->handleAnySettingsUser($event);
         }
     }
 
-    protected function handleAnySettings(Event $event, $settingsType): ?\Laminas\Form\Fieldset
+    protected function handleAnySettingsUser(Event $event): ?\Laminas\Form\Fieldset
     {
-        if ($settingsType !== 'user_settings') {
-            return parent::handleAnySettings($event, $settingsType);
-        }
-
         $elements = $this->readConfigElements();
         if (!$elements) {
             return null;
         }
 
+        /** @var \Guest\Form\UserForm $form */
         $form = $event->getTarget();
-        $formFieldset = parent::handleAnySettings($event, $settingsType);
+        $formFieldset = $this->handleAnySettings($event, 'user_settings');
 
         // Specific to this module.
         $services = $this->getServiceLocator();
@@ -340,7 +392,7 @@ class Module extends AbstractModule
         $fieldset = $this->userSettingsFieldset($user ? $user->getId() : null);
 
         if (!is_array($requestUserSettings)) {
-            $errorStore->addError('o:setting', new Message(
+            $errorStore->addError('o:setting', new PsrMessage(
                 'The key “o:setting” should be an array of user settings.' // @translate
             ));
             return;
@@ -359,9 +411,9 @@ class Module extends AbstractModule
             if ($element->getAttribute('required')
                 && (($isMultipleValues && !count($value)) || (!$isMultipleValues && !strlen($value)))
             ) {
-                $errorStore->addError('o:setting', new Message(
-                    'A value is required for “%s”.', // @translate
-                    $key
+                $errorStore->addError('o:setting', new PsrMessage(
+                    'A value is required for “{key}”.', // @translate
+                    ['key' => $key]
                 ));
                 continue;
             }
@@ -383,26 +435,26 @@ class Module extends AbstractModule
                 if ($isMultipleValues) {
                     $values = array_intersect_key($valueOptions, array_flip($value));
                     if (method_exists($element, 'isMultiple') && !$element->isMultiple()) {
-                        $errorStore->addError('o:setting', new Message(
-                            'Only one value is allowed for “%s”.', // @translate
-                            $key
+                        $errorStore->addError('o:setting', new PsrMessage(
+                            'Only one value is allowed for “{key}”.', // @translate
+                            ['key' => $key]
                         ));
                     } elseif (count($value) !== count($values)) {
-                        $errorStore->addError('o:setting', new Message(
-                            'One or more values (“%s”) are not allowed for “%s”.', // @translate
-                            implode('”, “', array_diff($value, array_keys($valueOptions))), $key
+                        $errorStore->addError('o:setting', new PsrMessage(
+                            'One or more values (“{values}”) are not allowed for “{key}”.', // @translate
+                            ['values' => implode('”, “', array_diff($value, array_keys($valueOptions))), 'key' => $key]
                         ));
                     } elseif (!count($values) && $element->getAttribute('required')) {
-                        $errorStore->addError('o:setting', new Message(
-                            'A value is required for “%s”.', // @translate
-                            $key
+                        $errorStore->addError('o:setting', new PsrMessage(
+                            'A value is required for “{key}”.', // @translate
+                            ['key' => $key]
                         ));
                     }
                 } else {
                     if (strlen($value) && !isset($valueOptions[$value])) {
-                        $errorStore->addError('o:setting', new Message(
-                            'The value “%s” is not allowed for “%s”.', // @translate
-                            $value, $key
+                        $errorStore->addError('o:setting', new PsrMessage(
+                            'The value “{value}” is not allowed for “{key}”.', // @translate
+                            ['value' => $value, 'key' => $key]
                         ));
                     }
                 }
@@ -410,14 +462,14 @@ class Module extends AbstractModule
                 if (method_exists($element, 'isMultiple') && $element->isMultiple()
                     || $element instanceof \Laminas\Form\Element\MultiCheckbox
                 ) {
-                    $errorStore->addError('o:setting', new Message(
-                        'An array of values is required for “%s”.', // @translate
-                        $key
+                    $errorStore->addError('o:setting', new PsrMessage(
+                        'An array of values is required for “{key}”.', // @translate
+                        ['key' => $key]
                     ));
                 } elseif (!isset($valueOptions[$value])) {
-                    $errorStore->addError('o:setting', new Message(
-                        'The value “%s” is not allowed for “%s”.', // @translate
-                        $value, $key
+                    $errorStore->addError('o:setting', new PsrMessage(
+                        'The value “{value}” is not allowed for “{key}”.', // @translate
+                        ['value' => $value, 'key' => $key]
                     ));
                 }
             }
