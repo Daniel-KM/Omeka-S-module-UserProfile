@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-08 00:00+0000\n"
+"POT-Creation-Date: 2024-02-12 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,42 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
-#: src/Generic/AbstractModule.php:890
+#: data/scripts/upgrade.php:40 Module.php:67
 #, php-format
-msgid "This module requires the module \"%s\"."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:93
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:101
-msgid "This module has resources that cannot be installed."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:108
-msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:398
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:885
-#, php-format
-msgid "This module requires the module \"%1$s\", version %2$s or above."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:982
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
+msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
 #: view/common/admin/user-profile-list.phtml:24
@@ -60,43 +27,46 @@ msgstr ""
 msgid "User profile"
 msgstr ""
 
-#: data/scripts/upgrade.php:30
+#: data/scripts/upgrade.php:32
 msgid ""
 "It is now possible to remove values from guest form and to hide them in "
 "admin form."
 msgstr ""
 
-#: Module.php:188 src/Form/UserSettingsFieldset.php:15
+#: data/scripts/upgrade.php:49 Module.php:136
+msgid "You should fix the config of the module."
+msgstr ""
+
+#: Module.php:245
+msgid "These elements of user profile are invalid: {list}."
+msgstr ""
+
+#: Module.php:341 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr ""
 
-#: Module.php:329
+#: Module.php:483
 msgid "The key “o:setting” should be an array of user settings."
 msgstr ""
 
-#: Module.php:348 Module.php:382
-#, php-format
-msgid "A value is required for “%s”."
+#: Module.php:521 Module.php:543 Module.php:576 Module.php:611
+msgid "A value is required for “{key}”."
 msgstr ""
 
-#: Module.php:372
-#, php-format
-msgid "Only one value is allowed for “%s”."
+#: Module.php:533 Module.php:601
+msgid "Only one value is allowed for “{key}”."
 msgstr ""
 
-#: Module.php:377
-#, php-format
-msgid "One or more values (“%s”) are not allowed for “%s”."
+#: Module.php:538 Module.php:606
+msgid "One or more values (“{values}”) are not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:389 Module.php:404
-#, php-format
-msgid "The value “%s” is not allowed for “%s”."
+#: Module.php:550 Module.php:618 Module.php:633
+msgid "The value “{value}” is not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:399
-#, php-format
-msgid "An array of values is required for “%s”."
+#: Module.php:558 Module.php:628
+msgid "An array of values is required for “{key}”."
 msgstr ""
 
 #: src/Form/ConfigForm.php:35

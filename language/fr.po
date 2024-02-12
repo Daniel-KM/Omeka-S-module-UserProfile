@@ -7,65 +7,27 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-08 00:00+0000\n"
-"PO-Revision-Date: 2023-05-08 00:00+0000\n"
+"POT-Creation-Date: 2024-02-12 00:00+0000\n"
+"PO-Revision-Date: 2024-02-12 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Generator: Poedit 3.2.2\n"
 
-#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
-#: src/Generic/AbstractModule.php:890
+#: data/scripts/upgrade.php:40 Module.php:67
 #, php-format
-msgid "This module requires the module \"%s\"."
-msgstr "Ce module requiert le module « %s »."
-
-#: src/Generic/AbstractModule.php:93
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr "Ce module requiert les modules « %s »."
-
-#: src/Generic/AbstractModule.php:101
-msgid "This module has resources that cannot be installed."
-msgstr "Ce module a des ressources qui ne peuvent pas être installées."
-
-#: src/Generic/AbstractModule.php:108
-msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
-msgstr ""
-"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
-"de les supprimer manuellement."
-
-#: src/Generic/AbstractModule.php:398
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
-msgstr ""
-"Le module a supprimé les tables « %s » depuis une installation échouée."
-
-#: src/Generic/AbstractModule.php:885
-#, php-format
-msgid "This module requires the module \"%1$s\", version %2$s or above."
-msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
-
-#: src/Generic/AbstractModule.php:982
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
-msgstr ""
-"Le module \"%s\" a été automatiquement désactivé car ses dépendances ne sont "
-"plus disponibles."
+msgid "The module %1$s should be upgraded to version %2$s or later."
+msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
 #: view/common/admin/user-profile-list.phtml:24
 #: view/common/admin/user-profile.phtml:28
 msgid "User profile"
 msgstr "Profil utilisateur"
 
-#: data/scripts/upgrade.php:30
+#: data/scripts/upgrade.php:32
 msgid ""
 "It is now possible to remove values from guest form and to hide them in "
 "admin form."
@@ -73,38 +35,43 @@ msgstr ""
 "Il est désormais possible de supprimer des valeurs des formulaires ou de les "
 "cacher."
 
-#: Module.php:188 src/Form/UserSettingsFieldset.php:15
+#: data/scripts/upgrade.php:49 Module.php:136
+msgid "You should fix the config of the module."
+msgstr "Vous devez corriger la configuration du module."
+
+#: Module.php:245
+msgid "These elements of user profile are invalid: {list}."
+msgstr "Ces éléments du profil utilisateur sont incorrects : {list}."
+
+#: Module.php:341 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr "Profil"
 
-#: Module.php:329
+#: Module.php:483
 msgid "The key “o:setting” should be an array of user settings."
 msgstr "La clé « o:setting » doit être un tableau de paramètres utilisateur."
 
-#: Module.php:348 Module.php:382
-#, php-format
-msgid "A value is required for “%s”."
-msgstr "Une valeur est nécessaire pour « %s »."
+#: Module.php:521 Module.php:543 Module.php:576 Module.php:611
+msgid "A value is required for “{key}”."
+msgstr "Une valeur est nécessaire pour « {key} »."
 
-#: Module.php:372
-#, php-format
-msgid "Only one value is allowed for “%s”."
-msgstr "Une seule valeur est possible pour « %s »."
+#: Module.php:533 Module.php:601
+msgid "Only one value is allowed for “{key}”."
+msgstr "Une seule valeur est possible pour « {key} »."
 
-#: Module.php:377
-#, php-format
-msgid "One or more values (“%s”) are not allowed for “%s”."
-msgstr "Une ou plusieurs valeurs (« %s ») ne sont pas autorisées pour « %s »."
+#: Module.php:538 Module.php:606
+msgid "One or more values (“{values}”) are not allowed for “{key}”."
+msgstr ""
+"Une ou plusieurs valeurs (« {values} ») ne sont pas autorisées pour "
+"« {key} »."
 
-#: Module.php:389 Module.php:404
-#, php-format
-msgid "The value “%s” is not allowed for “%s”."
-msgstr "La valeur « %s » n’est pas autorisée pour « %s »."
+#: Module.php:550 Module.php:618 Module.php:633
+msgid "The value “{value}” is not allowed for “{key}”."
+msgstr "La valeur « {value} » n’est pas autorisée pour « {key} »."
 
-#: Module.php:399
-#, php-format
-msgid "An array of values is required for “%s”."
-msgstr "Un tableau de valeurs est nécessaire pour « %s »."
+#: Module.php:558 Module.php:628
+msgid "An array of values is required for “{key}”."
+msgstr "Un tableau de valeurs est nécessaire pour « {key} »."
 
 #: src/Form/ConfigForm.php:35
 msgid "List of fields (as xml, json, or ini)"
@@ -121,3 +88,34 @@ msgstr ""
 #: src/Form/UserSettingsFieldset.php:12
 msgid "User Profile"
 msgstr "Profil utilisateur"
+
+#, php-format
+#~ msgid "This module requires the module \"%s\"."
+#~ msgstr "Ce module requiert le module « %s »."
+
+#, php-format
+#~ msgid "This module requires modules \"%s\"."
+#~ msgstr "Ce module requiert les modules « %s »."
+
+#~ msgid "This module has resources that cannot be installed."
+#~ msgstr "Ce module a des ressources qui ne peuvent pas être installées."
+
+#~ msgid ""
+#~ "This module cannot install its tables, because they exist already. Try to "
+#~ "remove them first."
+#~ msgstr ""
+#~ "Ce module ne peut pas installer ses tables car elles existent déjà. "
+#~ "Essayez de les supprimer manuellement."
+
+#, php-format
+#~ msgid "The module removed tables \"%s\" from a previous broken install."
+#~ msgstr ""
+#~ "Le module a supprimé les tables « %s » depuis une installation échouée."
+
+#, php-format
+#~ msgid ""
+#~ "The module \"%s\" was automatically deactivated because the dependencies "
+#~ "are unavailable."
+#~ msgstr ""
+#~ "Le module \"%s\" a été automatiquement désactivé car ses dépendances ne "
+#~ "sont plus disponibles."
