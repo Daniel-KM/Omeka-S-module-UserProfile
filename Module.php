@@ -40,10 +40,12 @@ use Laminas\Config\Reader\Json as JsonReader;
 use Laminas\Config\Reader\Xml as XmlReader;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Form\Fieldset;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\UserRepresentation;
 use Omeka\Module\AbstractModule;
+use UserProfile\Form\UserSettingsFieldset;
 
 class Module extends AbstractModule
 {
@@ -126,45 +128,132 @@ class Module extends AbstractModule
             return false;
         }
 
-        $this->updateListFields();
+        // Store data about the config early and once.
+        if (!$this->updateListFields()) {
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+            $messenger = $this->getServiceLocator()->get('ControllerPluginManager')->get('messenger');
+            $message = new PsrMessage(
+                'You should fix the config of the module.' // @translate
+            );
+            $messenger->addError($message);
+            return false;
+        }
+
         return true;
     }
 
-    protected function updateListFields(): void
+    /**
+     * Update list of fields from the config and store it in settings.
+     */
+    protected function updateListFields(): bool
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $fieldsConfig = $this->readConfigElements();
-
+        // The simplest way to get data is to create a temp fieldset.
+        // The fieldset may not be available during install/upgrade.
+        // Anyway, this is an empty fieldset filled with config.
+        /** @var \UserProfile\Form\UserSettingsFieldset $fieldset */
+        $formManager = $services->get('FormElementManager');
+        if ($formManager->has(UserSettingsFieldset::class)) {
+            $fieldset = $formManager->get(UserSettingsFieldset::class);
+        } else {
+            $fieldset = new Fieldset('user-profile');
+        }
         $fields = [];
         $exclude = [
             'admin' => ['show' => [], 'edit' => []],
             'public' => ['show' => [], 'edit' => []],
         ];
-        foreach ($fieldsConfig['elements'] as $element) {
-            if (!isset($element['name'])) {
+        $profileElements = $this->readConfigElements();
+        $elementErrors = [];
+        foreach ($profileElements['elements'] as $key => $elementConfig) {
+            $name = $elementConfig['name'] ?? null;
+            if (!$name) {
+                $elementErrors[] = $key;
                 continue;
             }
-            $fields[$element['name']] = empty($element['options']['label'])
-                ? $element['name']
-                : $element['options']['label'];
-            if (!empty($element['options']['exclude_admin_show'])) {
-                $exclude['admin']['show'] = $element['name'];
+            if (isset($fields[$name])) {
+                $elementErrors[] = $name;
+                continue;
             }
-            if (!empty($element['options']['exclude_admin_edit'])) {
-                $exclude['admin']['edit'] = $element['name'];
+            try {
+                $fieldset->add($elementConfig);
+            } catch (\Exception $e) {
+                $elementErrors[] = $name;
+                continue;
             }
-            if (!empty($element['options']['exclude_public_show'])) {
-                $exclude['public']['show'] = $element['name'];
+
+            /** @var \Laminas\Form\Element $element */
+            $element = $fieldset->get($name);
+            $label = $element->getLabel();
+            $required = (bool) $element->getAttribute('required');
+            $isMultiple = (method_exists($element, 'isMultiple') && $element->isMultiple())
+                || $element instanceof \Laminas\Form\Element\MultiCheckbox;
+            $isInt = $element instanceof \Laminas\Form\Element\Number;
+            $isBool = $element instanceof \Laminas\Form\Element\Checkbox
+                && !$element instanceof \Laminas\Form\Element\MultiCheckbox
+                && $element->getCheckedValue() === '1'
+                && $element->getUncheckedValue() === '0';
+            $allowedValues = null;
+            if (method_exists($element, 'getValueOptions')) {
+                $valueOptions = $element->getValueOptions();
+                // Note: value options can be an array of arrays with keys value
+                // and label, in particular when the config uses key with
+                // forbidden letters.
+                if (is_array(reset($valueOptions))) {
+                    $result = [];
+                    foreach ($valueOptions as $array) {
+                        $result[$array['value']] = true;
+                    }
+                    $valueOptions = $result;
+                }
+                // Don't add empty_option, that is a label.
+                $allowedValues = array_keys($valueOptions);
             }
-            if (!empty($element['options']['exclude_public_edit'])) {
-                $exclude['public']['edit'] = $element['name'];
+            $field = [
+                'name' => $name,
+                'label' => $label,
+                'required' => $required,
+                'is_multiple' => $isMultiple,
+                'is_int' => $isInt,
+                'is_bool' => $isBool,
+                'allowed_values' => $allowedValues,
+            ];
+            $fields[$name] = $field;
+
+            if ($element->getOption('exclude_admin_show')) {
+                $exclude['admin']['show'] = $name;
             }
+            if ($element->getOption('exclude_admin_edit')) {
+                $exclude['admin']['edit'] = $name;
+            }
+            if ($element->getOption('exclude_public_show')) {
+                $exclude['public']['show'] = $name;
+            }
+            if ($element->getOption('exclude_public_edit')) {
+                $exclude['public']['edit'] = $name;
+            }
+        }
+
+        if ($elementErrors) {
+            $logger = $services->get('Omeka\Logger');
+            $plugins = $services->get('ControllerPluginManager');
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+            $messenger = $plugins->get('messenger');
+            $message = new PsrMessage(
+                'These elements of user profile are invalid: {list}.', // @translate
+                ['list' => implode(', ', $elementErrors)]
+            );
+            $messenger->addError($message);
+            $logger->err($message->getMessage(), $message->getContext());
+            return false;
         }
 
         $settings->set('userprofile_fields', $fields);
         $settings->set('userprofile_exclude', $exclude);
+
+        return true;
     }
 
     public function handleUserSettings(Event $event): void
@@ -331,7 +420,7 @@ class Module extends AbstractModule
     /**
      * Unlike update, create cannot manage appended fields in views currently.
      *
-     * @param Event $event
+     * This check is not for api, that is checked via hydrate.
      */
     public function apiCreatePreUser(Event $event): void
     {
@@ -353,8 +442,7 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $request->setContent($post->toArray());
 
-        // TODO Check request from admin and guest form.
-        // $this->checkApiRequest($request);
+        $this->checkRequestValues($request);
     }
 
     public function apiHydratePreUser(Event $event): void
@@ -368,16 +456,17 @@ class Module extends AbstractModule
             return;
         }
 
-        $this->checkApiRequest($event);
+        $this->checkRequestValues($event);
     }
 
     /**
-     * Check an api request before hydration.
+     * Check a request before hydration.
+     *
+     * The check uses the form when possible (with a user).
+     * Manage partial update, so required values are not checked if missing.
      */
-    protected function checkApiRequest(Event $event): void
+    protected function checkRequestValues(Event $event): void
     {
-        // TODO Manage "required" during create and update.
-
         // Only if the request has settings.
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
@@ -388,8 +477,6 @@ class Module extends AbstractModule
 
         /** @var \Omeka\Stdlib\ErrorStore $errorStore */
         $errorStore = $event->getParam('errorStore');
-        $user = $event->getParam('entity');
-        $fieldset = $this->userSettingsFieldset($user ? $user->getId() : null);
 
         if (!is_array($requestUserSettings)) {
             $errorStore->addError('o:setting', new PsrMessage(
@@ -398,18 +485,92 @@ class Module extends AbstractModule
             return;
         }
 
+        // TODO Use the validator of the element, but the user id should be set, that is not possible during creation of a user.
+        // The user may be currently being created.
+        // Don't check current authenticated user, but the user being created/updated.
+        $user = $event->getParam('entity');
+        $userId = $user->getId();
+        $fieldset = $userId ? $this->userSettingsFieldset($userId) : null;
+
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $fields = $settings->get('userprofile_fields', []);
+
         foreach ($requestUserSettings as $key => $value) {
-            if (!$fieldset->has($key)) {
+            if ($fieldset && !$fieldset->has($key)) {
+                continue;
+            }
+            if (!$fieldset && !isset($fields[$key])) {
                 continue;
             }
 
-            // TODO Use the validator of the element.
-            /** @var \Laminas\Form\Element $element */
-            $element = $fieldset->get($key);
             $isMultipleValues = is_array($value);
 
+            // Same checks than elements, but without them.
+            if (!$fieldset) {
+                $field = $fields[$key];
+
+                if ($field['required']
+                    && (
+                        ($isMultipleValues && !count($value))
+                        || (!$isMultipleValues && !strlen((string) $value))
+                    )
+                ) {
+                    $errorStore->addError('o:setting', new PsrMessage(
+                        'A value is required for “{key}”.', // @translate
+                        ['key' => $key]
+                    ));
+                    continue;
+                }
+
+                $allowedValues = $field['allowed_values'];
+                if (is_array($allowedValues)) {
+                    if ($isMultipleValues) {
+                        $values = $allowedValues ? array_intersect($allowedValues, $value) : $value;
+                        if (!$field['is_multiple']) {
+                            $errorStore->addError('o:setting', new PsrMessage(
+                                'Only one value is allowed for “{key}”.', // @translate
+                                ['key' => $key]
+                            ));
+                        } elseif (count($value) !== count($values)) {
+                            $errorStore->addError('o:setting', new PsrMessage(
+                                'One or more values (“{values}”) are not allowed for “{key}”.', // @translate
+                                ['values' => implode('”, “', array_diff($value, $allowedValues)), 'key' => $key]
+                            ));
+                        } elseif (!count($values) && $field['required']) {
+                            $errorStore->addError('o:setting', new PsrMessage(
+                                'A value is required for “{key}”.', // @translate
+                                ['key' => $key]
+                            ));
+                        }
+                    } else {
+                        if (strlen((string) $value) && !in_array($value, $allowedValues)) {
+                            $errorStore->addError('o:setting', new PsrMessage(
+                                'The value “{value}” is not allowed for “{key}”.', // @translate
+                                ['value' => $value, 'key' => $key]
+                            ));
+                        }
+                    }
+                } else {
+                    if ($field['is_multiple'] && !$isMultipleValues) {
+                        $errorStore->addError('o:setting', new PsrMessage(
+                            'An array of values is required for “{key}”.', // @translate
+                            ['key' => $key]
+                        ));
+                    }
+                }
+                continue;
+            }
+
+            /** @var \Laminas\Form\Element $element */
+            $element = $fieldset->get($key);
+
             if ($element->getAttribute('required')
-                && (($isMultipleValues && !count($value)) || (!$isMultipleValues && !strlen($value)))
+                && (
+                    ($isMultipleValues && !count($value))
+                    || (!$isMultipleValues && !strlen($value))
+                )
             ) {
                 $errorStore->addError('o:setting', new PsrMessage(
                     'A value is required for “{key}”.', // @translate
@@ -422,18 +583,19 @@ class Module extends AbstractModule
             if (method_exists($element, 'getValueOptions')) {
                 $valueOptions = $element->getValueOptions();
                 // Note: value options can be an array of arrays with keys value
-                // and label, iin particular when the config uses key with
+                // and label, in particular when the config uses key with
                 // forbidden letters.
                 if (is_array(reset($valueOptions))) {
                     $result = [];
                     foreach ($valueOptions as $array) {
-                        $result[$array['label']] = $array['value'];
+                        $result[$array['value']] = true;
                     }
                     $valueOptions = $result;
                 }
+                $allowedValues = array_keys($valueOptions);
 
                 if ($isMultipleValues) {
-                    $values = array_intersect_key($valueOptions, array_flip($value));
+                    $values = $allowedValues ? array_intersect($allowedValues, $value) : $value;
                     if (method_exists($element, 'isMultiple') && !$element->isMultiple()) {
                         $errorStore->addError('o:setting', new PsrMessage(
                             'Only one value is allowed for “{key}”.', // @translate
@@ -442,7 +604,7 @@ class Module extends AbstractModule
                     } elseif (count($value) !== count($values)) {
                         $errorStore->addError('o:setting', new PsrMessage(
                             'One or more values (“{values}”) are not allowed for “{key}”.', // @translate
-                            ['values' => implode('”, “', array_diff($value, array_keys($valueOptions))), 'key' => $key]
+                            ['values' => implode('”, “', array_diff($value, $allowedValues)), 'key' => $key]
                         ));
                     } elseif (!count($values) && $element->getAttribute('required')) {
                         $errorStore->addError('o:setting', new PsrMessage(
@@ -451,7 +613,7 @@ class Module extends AbstractModule
                         ));
                     }
                 } else {
-                    if (strlen($value) && !isset($valueOptions[$value])) {
+                    if (strlen($value) && !in_array($value, $allowedValues)) {
                         $errorStore->addError('o:setting', new PsrMessage(
                             'The value “{value}” is not allowed for “{key}”.', // @translate
                             ['value' => $value, 'key' => $key]
@@ -466,7 +628,7 @@ class Module extends AbstractModule
                         'An array of values is required for “{key}”.', // @translate
                         ['key' => $key]
                     ));
-                } elseif (!isset($valueOptions[$value])) {
+                } elseif (!in_array($value, $allowedValues)) {
                     $errorStore->addError('o:setting', new PsrMessage(
                         'The value “{value}” is not allowed for “{key}”.', // @translate
                         ['value' => $value, 'key' => $key]
@@ -519,6 +681,8 @@ class Module extends AbstractModule
 
     protected function apiCreateOrUpdatePostUser(Event $event): void
     {
+        // During post, the user id is always set.
+
         // Only if the request has settings.
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
@@ -527,11 +691,16 @@ class Module extends AbstractModule
             return;
         }
 
-        /** @var \Omeka\Stdlib\ErrorStore $errorStore */
+        /**
+         * @var \Omeka\Stdlib\ErrorStore $errorStore
+         * @var \Omeka\Entity\User $user
+         * @var \Omeka\Settings\UserSettings $userSettings
+         */
         $user = $event->getParam('response')->getContent();
+        $userId = $user->getId();
         $services = $this->getServiceLocator();
         $userSettings = $services->get('Omeka\Settings\User');
-        $userSettings->setTargetId($user->getId());
+        $userSettings->setTargetId($userId);
         $fieldset = $this->userSettingsFieldset($user->getId());
 
         $exclude = $this->excludedFields('edit');
@@ -562,20 +731,19 @@ class Module extends AbstractModule
                 $value = (int) $value;
             }
 
-            $userSettings->set($key, $value);
+            // Keep $userId here to avoid issues.
+            $userSettings->set($key, $value, $userId);
         }
     }
 
     /**
      * Get the fieldset "user-setting" of the user form.
-     *
-     * @param int $userId
-     * @return \Laminas\Form\Fieldset
      */
-    protected function userSettingsFieldset($userId = null)
+    protected function userSettingsFieldset(?int $userId = null): \Laminas\Form\Fieldset
     {
         $services = $this->getServiceLocator();
         // $isSiteRequest = $services->get('Omeka\Status')->isSiteRequest();
+        /** @var \UserProfile\Form\UserSettingsFieldset $form */
         $form = $services->get('FormElementManager')
             ->get(\Omeka\Form\UserForm::class, [
                 // 'is_public' => $isSiteRequest,
@@ -627,7 +795,7 @@ class Module extends AbstractModule
             [
                 'user' => $user,
                 'userSettings' => $userSettings,
-                'fields' => $fields,
+                'fields' => array_column($fields, 'label', 'name'),
             ]
         );
     }
