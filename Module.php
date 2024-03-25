@@ -442,7 +442,7 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $request->setContent($post->toArray());
 
-        $this->checkRequestValues($request);
+        $this->checkRequestValues($event);
     }
 
     public function apiHydratePreUser(Event $event): void
