@@ -18,7 +18,7 @@ Install optional modules [Guest] and [Generic].
 
 Uncompress files and rename module folder "UserProfile".
 
-See general end user documentation for [Installing a module].
+See general end user documentation for [installing a module].
 
 
 Usage
@@ -258,7 +258,7 @@ et [Université de la Guyane], currently managed with [Greenstone].
 [Omeka S]: https://omeka.org/s
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
-[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Zend/Laminas form]: https://docs.laminas.dev/laminas-config/reader
 [Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
