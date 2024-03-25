@@ -7,8 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-12 00:00+0000\n"
-"PO-Revision-Date: 2024-02-12 00:00+0000\n"
+"POT-Creation-Date: 2024-03-25 00:00+0000"
+"MI+ZONE\n"
+"PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: data/scripts/upgrade.php:40 Module.php:67
+#: data/scripts/upgrade.php:32 Module.php:67
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
@@ -27,7 +28,15 @@ msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieur
 msgid "User profile"
 msgstr "Profil utilisateur"
 
-#: data/scripts/upgrade.php:32
+#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:75
+msgid ""
+"To upgrade the config, you should go to the {link}config form{link_end} and "
+"submit it manually."
+msgstr ""
+"Pour mettre à jour la configuration, vous devez enregistrer le {link}"
+"formulaire de configuration{link_end} manuellement."
+
+#: data/scripts/upgrade.php:52
 msgid ""
 "It is now possible to remove values from guest form and to hide them in "
 "admin form."
@@ -35,7 +44,7 @@ msgstr ""
 "Il est désormais possible de supprimer des valeurs des formulaires ou de les "
 "cacher."
 
-#: data/scripts/upgrade.php:49 Module.php:136
+#: Module.php:136
 msgid "You should fix the config of the module."
 msgstr "Vous devez corriger la configuration du module."
 
