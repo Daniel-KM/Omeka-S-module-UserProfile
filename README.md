@@ -61,7 +61,7 @@ dot "`.`"  and the vertical apostrophe “`'`”. You can replace the last by a 
 apostrophe “`’`” instead, but you cannot replace the dot. In that case, use
 formats `xml` or `json`. With xml, the keys cannot contains space, greater sign
 `>`, lower sign `<`, single `'` and double quote `"`". With json, some
-characters should be escaped, and the data must be well formed, in particular
+characters should be escaped, and the data must be well-formed, in particular
 without trailing comma `,` on last key of each group.
 
 - `ini`
