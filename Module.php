@@ -455,7 +455,7 @@ class Module extends AbstractModule
         // The user may be currently being created.
         // Don't check current authenticated user, but the user being created/updated.
         $user = $event->getParam('entity');
-        $userId = $user->getId();
+        $userId = $user ? $user->getId() : null;
         $fieldset = $userId ? $this->userSettingsFieldset($userId) : null;
 
         $services = $this->getServiceLocator();
