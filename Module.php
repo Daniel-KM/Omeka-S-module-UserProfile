@@ -13,6 +13,7 @@ use Laminas\Config\Reader\Json as JsonReader;
 use Laminas\Config\Reader\Xml as XmlReader;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
@@ -174,22 +175,8 @@ class Module extends AbstractModule
                 && !$element instanceof \Laminas\Form\Element\MultiCheckbox
                 && $element->getCheckedValue() === '1'
                 && $element->getUncheckedValue() === '0';
-            $allowedValues = null;
-            if (method_exists($element, 'getValueOptions')) {
-                $valueOptions = $element->getValueOptions();
-                // Note: value options can be an array of arrays with keys value
-                // and label, in particular when the config uses key with
-                // forbidden letters.
-                if (is_array(reset($valueOptions))) {
-                    $result = [];
-                    foreach ($valueOptions as $array) {
-                        $result[$array['value']] = true;
-                    }
-                    $valueOptions = $result;
-                }
-                // Don't add empty_option, that is a label.
-                $allowedValues = array_keys($valueOptions);
-            }
+            // Currently, only select and multicheckbox are checked.
+            $allowedValues = $this->elementAllowedValues($element);
             $field = [
                 'name' => $name,
                 'label' => $label,
@@ -559,20 +546,8 @@ class Module extends AbstractModule
             }
 
             // Currently, only select and multicheckbox are checked.
-            if (method_exists($element, 'getValueOptions')) {
-                $valueOptions = $element->getValueOptions();
-                // Note: value options can be an array of arrays with keys value
-                // and label, in particular when the config uses key with
-                // forbidden letters.
-                if (is_array(reset($valueOptions))) {
-                    $result = [];
-                    foreach ($valueOptions as $array) {
-                        $result[$array['value']] = true;
-                    }
-                    $valueOptions = $result;
-                }
-                $allowedValues = array_keys($valueOptions);
-
+            $allowedValues = $this->elementAllowedValues($element);
+            if ($allowedValues !== null) {
                 if ($isMultipleValues) {
                     $values = $allowedValues ? array_intersect($allowedValues, $value) : $value;
                     if (method_exists($element, 'isMultiple') && !$element->isMultiple()) {
@@ -703,7 +678,8 @@ class Module extends AbstractModule
             // Some cleaning, required because some fields are not checked
             // during creation via form.
             if (method_exists($element, 'getValueOptions') && $isMultipleValues) {
-                $value = array_keys(array_intersect_key($element->getValueOptions(), array_flip($value)));
+                $allowedValues = $this->elementAllowedValues($element);
+                $value = array_values(array_intersect($allowedValues, $value));
             } elseif ($element instanceof \Laminas\Form\Element\Checkbox) {
                 $value = (bool) $value;
             } elseif ($element instanceof \Laminas\Form\Element\Number) {
@@ -817,6 +793,45 @@ class Module extends AbstractModule
         }
 
         return ['elements' => []];
+    }
+
+    /**
+     * Get allowed values for a form element.
+     *
+     * Currently, only select and multicheckbox are checked.
+     */
+    protected function elementAllowedValues(Element $element): ?array
+    {
+        if (!method_exists($element, 'getValueOptions')) {
+            return null;
+        }
+
+        $valueOptions = $element->getValueOptions();
+
+        // Note: value options can be an array of arrays with keys value
+        // and label, in particular when the config uses key with
+        // forbidden letters.
+        // It may be a grouped select too, so an array of arrays with
+        // keys label and options.
+        $first = reset($valueOptions);
+        if (is_array($first)) {
+            $result = [];
+            if (isset($first['value'])) {
+                foreach ($valueOptions as $array) {
+                    $result[$array['value']] = true;
+                }
+            } elseif (isset($first['options'])) {
+                foreach ($valueOptions as $array) {
+                    foreach ($array['options'] as $option) {
+                        $result[$option] = true;
+                    }
+                }
+            }
+            $valueOptions = $result;
+        }
+
+        // Don't add empty_option, that is a label.
+        return array_keys($valueOptions);
     }
 
     protected function excludedFields(string $part): array
