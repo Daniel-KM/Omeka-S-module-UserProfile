@@ -408,11 +408,12 @@ class Module extends AbstractModule
             return;
         }
 
+        /** @var \Omeka\Settings\UserSettings $userSettings */
         $userSettings = $services->get('Omeka\Settings\User');
-        $userSettings->setTargetId($user->id());
 
+        // Don't set the target id early to allow to use another user.
         foreach (array_keys($fields) as $field) {
-            $value = $userSettings->get($field);
+            $value = $userSettings->get($field, null, $user->id());
             $jsonLd['o:setting'][$field] = $value;
         }
 
