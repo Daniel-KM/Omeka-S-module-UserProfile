@@ -53,6 +53,9 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
+        // Append the settings to the current user.
+        // Rights are the same than main one, so it is available only for the
+        // current user or admin with credentials.
         $sharedEventManager->attach(
             \Omeka\Api\Representation\UserRepresentation::class,
             'rep.resource.json',
@@ -146,6 +149,24 @@ class Module extends AbstractModule
             'public' => ['show' => [], 'edit' => []],
         ];
         $profileElements = $this->readConfigElements();
+        if (!$profileElements) {
+            return false;
+        }
+
+        if (is_string($profileElements)) {
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+            $logger = $services->get('Omeka\Logger');
+            $plugins = $services->get('ControllerPluginManager');
+            $messenger = $plugins->get('messenger');
+            $message = new PsrMessage(
+                'The settings cannot be parsed: {msg}.', // @translate
+                ['msg' => $profileElements]
+            );
+            $messenger->addError($message);
+            $logger->err($message->getMessage(), $message->getContext());
+            return false;
+        }
+
         $elementErrors = [];
         foreach ($profileElements['elements'] as $key => $elementConfig) {
             $name = $elementConfig['name'] ?? null;
@@ -203,9 +224,9 @@ class Module extends AbstractModule
         }
 
         if ($elementErrors) {
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
             $logger = $services->get('Omeka\Logger');
             $plugins = $services->get('ControllerPluginManager');
-            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
             $messenger = $plugins->get('messenger');
             $message = new PsrMessage(
                 'These elements of user profile are invalid: {list}.', // @translate
@@ -263,6 +284,21 @@ class Module extends AbstractModule
     {
         $elements = $this->readConfigElements();
         if (!$elements) {
+            return null;
+        }
+
+        if (is_string($elements)) {
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+            $services = $this->getServiceLocator();
+            $logger = $services->get('Omeka\Logger');
+            $plugins = $services->get('ControllerPluginManager');
+            $messenger = $plugins->get('messenger');
+            $message = new PsrMessage(
+                'The settings cannot be parsed: {msg}.', // @translate
+                ['msg' => $elements]
+            );
+            $messenger->addError($message);
+            $logger->err($message->getMessage(), $message->getContext());
             return null;
         }
 
@@ -755,44 +791,61 @@ class Module extends AbstractModule
         );
     }
 
-    protected function readConfigElements(): array
+    /**
+     * @return array|string Return a string in case of error, else the elements.
+     */
+    protected function readConfigElements()
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
         $elements = $settings->get('userprofile_elements');
+        $elements = trim((string) $elements);
         if (!$elements) {
             return ['elements' => []];
         }
 
-        try {
-            $reader = new IniReader;
-            $config = $reader->fromString($elements);
-            if ($config && count($config['elements'])) {
-                return $config;
+        $isJson = mb_substr($elements, 0, 1) === '{';
+        $isXml = mb_substr($elements, 0, 1) === '<';
+        $isIni = !$isJson && !$isXml;
+
+        if ($isIni) {
+            try {
+                $reader = new IniReader;
+                $config = $reader->fromString($elements);
+                if ($config && count($config['elements'])) {
+                    return $config;
+                }
+            } catch (\Laminas\Config\Exception\RuntimeException $e) {
+                return $e->getMessage();
             }
-        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
-        try {
-            $reader = new XmlReader;
-            $config = $reader->fromString($elements);
-            if ($config && count($config)) {
-                return ['elements' => $config];
+        if ($isJson) {
+            try {
+                $reader = new JsonReader;
+                $config = $reader->fromString($elements);
+                if ($config && count($config['elements'])) {
+                    return $config;
+                }
+            } catch (\Laminas\Config\Exception\RuntimeException $e) {
+                return $e->getMessage();
             }
-        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
-        try {
-            $reader = new JsonReader;
-            $config = $reader->fromString($elements);
-            if ($config && count($config['elements'])) {
-                return $config;
+        if ($isXml) {
+            try {
+                $reader = new XmlReader;
+                $config = $reader->fromString($elements);
+                if ($config && count($config)) {
+                    return ['elements' => $config];
+                }
+            } catch (\Laminas\Config\Exception\RuntimeException $e) {
+                return $e->getMessage();
             }
-        } catch (\Laminas\Config\Exception\RuntimeException $e) {
         }
 
-        return ['elements' => []];
+        return 'Undetermined format.'; // @translate
     }
 
     /**
