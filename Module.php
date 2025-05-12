@@ -2,7 +2,7 @@
 
 namespace UserProfile;
 
-if (!class_exists(\Common\TraitModule::class)) {
+if (!class_exists('Common\TraitModule', false)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
@@ -22,7 +22,7 @@ use Omeka\Module\AbstractModule;
 use UserProfile\Form\UserSettingsFieldset;
 
 /**
- * User Profile
+ * User Profile.
  *
  * @copyright Daniel Berthereau, 2019-2025
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
