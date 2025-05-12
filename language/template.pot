@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-25 00:00+0000"
+"POT-Creation-Date: 2025-05-12 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:32 Module.php:67
+#: data/scripts/upgrade.php:32 Module.php:47
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
@@ -39,39 +39,43 @@ msgid ""
 "admin form."
 msgstr ""
 
-#: Module.php:136
+#: Module.php:121
 msgid "You should fix the config of the module."
 msgstr ""
 
-#: Module.php:245
+#: Module.php:164 Module.php:301
+msgid "The settings cannot be parsed: {msg}."
+msgstr ""
+
+#: Module.php:235
 msgid "These elements of user profile are invalid: {list}."
 msgstr ""
 
-#: Module.php:341 src/Form/UserSettingsFieldset.php:15
+#: Module.php:347 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr ""
 
-#: Module.php:483
+#: Module.php:490
 msgid "The key “o:setting” should be an array of user settings."
 msgstr ""
 
-#: Module.php:521 Module.php:543 Module.php:576 Module.php:611
+#: Module.php:528 Module.php:550 Module.php:583 Module.php:606
 msgid "A value is required for “{key}”."
 msgstr ""
 
-#: Module.php:533 Module.php:601
+#: Module.php:540 Module.php:596
 msgid "Only one value is allowed for “{key}”."
 msgstr ""
 
-#: Module.php:538 Module.php:606
+#: Module.php:545 Module.php:601
 msgid "One or more values (“{values}”) are not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:550 Module.php:618 Module.php:633
+#: Module.php:557 Module.php:613 Module.php:628
 msgid "The value “{value}” is not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:558 Module.php:628
+#: Module.php:565 Module.php:623
 msgid "An array of values is required for “{key}”."
 msgstr ""
 

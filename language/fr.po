@@ -7,8 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-25 00:00+0000"
-"MI+ZONE\n"
+"POT-Creation-Date: 2025-05-12 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -18,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: data/scripts/upgrade.php:32 Module.php:67
+#: data/scripts/upgrade.php:32 Module.php:47
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
@@ -44,41 +43,45 @@ msgstr ""
 "Il est désormais possible de supprimer des valeurs des formulaires ou de les "
 "cacher."
 
-#: Module.php:136
+#: Module.php:121
 msgid "You should fix the config of the module."
 msgstr "Vous devez corriger la configuration du module."
 
-#: Module.php:245
+#: Module.php:164 Module.php:301
+msgid "The settings cannot be parsed: {msg}."
+msgstr "Les paramètres ne peuvent pas être analysés : {msg}."
+
+#: Module.php:235
 msgid "These elements of user profile are invalid: {list}."
 msgstr "Ces éléments du profil utilisateur sont incorrects : {list}."
 
-#: Module.php:341 src/Form/UserSettingsFieldset.php:15
+#: Module.php:347 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr "Profil"
 
-#: Module.php:483
+#: Module.php:490
 msgid "The key “o:setting” should be an array of user settings."
 msgstr "La clé « o:setting » doit être un tableau de paramètres utilisateur."
 
-#: Module.php:521 Module.php:543 Module.php:576 Module.php:611
+#: Module.php:528 Module.php:550 Module.php:583 Module.php:606
 msgid "A value is required for “{key}”."
 msgstr "Une valeur est nécessaire pour « {key} »."
 
-#: Module.php:533 Module.php:601
+#: Module.php:540 Module.php:596
 msgid "Only one value is allowed for “{key}”."
 msgstr "Une seule valeur est possible pour « {key} »."
 
-#: Module.php:538 Module.php:606
+#: Module.php:545 Module.php:601
 msgid "One or more values (“{values}”) are not allowed for “{key}”."
 msgstr ""
 "Une ou plusieurs valeurs (« {values} ») ne sont pas autorisées pour "
 "« {key} »."
 
-#: Module.php:550 Module.php:618 Module.php:633
+#: Module.php:557 Module.php:613 Module.php:628
 msgid "The value “{value}” is not allowed for “{key}”."
 msgstr "La valeur « {value} » n’est pas autorisée pour « {key} »."
 
-#: Module.php:558 Module.php:628
+#: Module.php:565 Module.php:623
 msgid "An array of values is required for “{key}”."
 msgstr "Un tableau de valeurs est nécessaire pour « {key} »."
 
