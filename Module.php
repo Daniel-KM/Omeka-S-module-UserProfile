@@ -780,7 +780,6 @@ class Module extends AbstractModule
         $exclude = $this->excludedFields('show');
         $fields = array_diff_key($fields, array_flip($exclude));
         $userSettings = $services->get('Omeka\Settings\User');
-        $userSettings->setTargetId($user->id());
         echo $view->partial(
             $partial,
             [
