@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Omeka\Entity\User $user
+ * @var \Omeka\Api\Representation\UserRepresentation $user
  * @var \Omeka\Settings\UserSettings $userSettings
  * @var array $fields
  */
@@ -11,6 +11,8 @@
 $plugins = $this->getHelperPluginManager();
 $escape = $plugins->get('escapeHtml');
 $translate = $plugins->get('translate');
+
+$userId = $user->id();
 ?>
 
 <style>
@@ -26,11 +28,23 @@ $translate = $plugins->get('translate');
             <ul class="user-profile">
                 <?php foreach ($fields as $field => $label): ?>
                 <li>
-                    <span class="profile-field"><?= $translate($label) ?>:</span>
-                    <?php $values = $userSettings->get($field); ?>
+                    <span class="user-profile-field"><?= $translate($label) ?>:</span>
+                    <?php $values = $userSettings->get($field, null, $userId); ?>
                     <?php if (!is_array($values)) $values = [$values]; ?>
                     <?php foreach ($values as $value): ?>
+                    <?php if (is_array($value)): ?>
+                    <ul>
+                        <?php foreach ($value as $key => $val): ?>
+                        <li>
+                            <span class="label"><?= $escape($key) ?></span> :
+                            <span class="value"><?= $escape(is_array($val) ? implode(', ', $val) : $val) ?></span>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php else: ?>
                     <span class="value"><?= $escape($value) ?></span>
+                    <?php endif; ?>
+                    <br/>
                     <?php endforeach; ?>
                 </li>
                 <?php endforeach; ?>
