@@ -347,7 +347,7 @@ class Module extends AbstractModule
             if (in_array($name, $exclude)) {
                 continue;
             }
-            $data[$name] = $userSettings ? $userSettings->get($name) : null;
+            $data[$name] = $userSettings ? $userSettings->get($name, null, $userId) : null;
             if (empty($element['options']['element_group'])) {
                 $element['options']['element_group'] = 'profile';
             } elseif (!isset($elementGroups[$element['options']['element_group']])) {
@@ -683,17 +683,16 @@ class Module extends AbstractModule
         }
 
         /**
-         * @var \Omeka\Stdlib\ErrorStore $errorStore
          * @var \Omeka\Entity\User $user
          * @var \Omeka\Settings\UserSettings $userSettings
          */
-        $user = $event->getParam('response')->getContent();
-        $userId = $user->getId();
         $services = $this->getServiceLocator();
         $userSettings = $services->get('Omeka\Settings\User');
-        $userSettings->setTargetId($userId);
-        $fieldset = $this->userSettingsFieldset($user->getId());
 
+        $user = $event->getParam('response')->getContent();
+        $userId = $user->getId();
+
+        $fieldset = $this->userSettingsFieldset($user->getId());
         $exclude = $this->excludedFields('edit');
 
         foreach ($requestUserSettings as $key => $value) {
@@ -723,7 +722,7 @@ class Module extends AbstractModule
                 $value = (int) $value;
             }
 
-            // Keep $userId here to avoid issues.
+            // Set userId as target here to avoid issues.
             $userSettings->set($key, $value, $userId);
         }
     }
