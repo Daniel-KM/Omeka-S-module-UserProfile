@@ -60,7 +60,7 @@ if (version_compare($oldVersion, '3.4.8', '<')) {
     // Update hidden list of fields.
     try {
         $result = $this->updateListFields();
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $result = false;
     }
     if (!$result) {

@@ -180,7 +180,7 @@ class Module extends AbstractModule
             }
             try {
                 $fieldset->add($elementConfig);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $elementErrors[] = $name;
                 continue;
             }
