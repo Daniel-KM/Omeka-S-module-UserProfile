@@ -144,22 +144,29 @@ class Module extends AbstractModule
             elements.userprofile_status_other.attributes.placeholder    = "Indiquez votre statut…"
             INI;
 
-        // Add the fields to the config when they are not set, only when the
-        // config is empty or in format ini, the format of the new fields.
+        // Add the fields to the config when they are not set, in the simple
+        // syntax, editable as a form, when the config is empty or in this
+        // syntax, or in ini when the config is in ini.
         $elements = trim((string) $settings->get('userprofile_elements'));
         $hasFields = strpos($elements, 'userprofile_status') !== false;
-        $isIni = $elements === '' || $this->configFormat($elements) === 'ini';
-        if (!$hasFields && $isIni) {
-            $settings->set('userprofile_elements', trim($elements . "\n\n" . $iniElements));
-            if (!$this->updateListFields()) {
+        $format = $elements === '' ? 'fields' : $this->configFormat($elements);
+        $isAdded = false;
+        if (!$hasFields && in_array($format, ['fields', 'ini'], true)) {
+            try {
+                $newElements = $format === 'ini' ? $iniElements : $this->convertConfigFormat($iniElements, 'fields');
+                $settings->set('userprofile_elements', trim($elements . "\n\n" . $newElements));
+                $isAdded = $this->updateListFields();
+            } catch (\Throwable $e) {
+                $isAdded = false;
+            }
+            if (!$isAdded) {
                 $settings->set('userprofile_elements', $elements);
                 $this->updateListFields();
-                $isIni = false;
             }
         }
-        if (!$hasFields && !$isIni) {
+        if (!$hasFields && !$isAdded) {
             $message = new PsrMessage(
-                'The fields of the module Guest Profile cannot be added automatically to the config, that is not in format ini. Add the fields "userprofile_status" and "userprofile_status_other" manually.' // @translate
+                'The fields of the module Guest Profile cannot be added automatically to the config. Add the fields "userprofile_status" and "userprofile_status_other" manually.' // @translate
             );
             $messenger->addWarning($message);
         }

@@ -39,22 +39,21 @@ class ConfigForm extends Form
     public function init(): void
     {
         $placeholder = <<<'TXT'
-elements.userprofile_phone.name = "userprofile_phone"
-elements.userprofile_phone.type = "Tel"
-elements.userprofile_phone.options.label = "Phone"
-elements.userprofile_phone.attributes.id = "userprofile_phone"
-
-elements.userprofile_organisation.name = "userprofile_organisation"
-elements.userprofile_organisation.type = "Select"
-elements.userprofile_organisation.options.label = "Organisation"
-elements.userprofile_organisation.options.value_options[none] = "None"
-elements.userprofile_organisation.options.value_options[Alpha] = "Alpha"
-elements.userprofile_organisation.options.value_options[Beta] = "Beta"
-elements.userprofile_organisation.options.value_options[Gamma’s Delta] = "Gamma’s Delta"
-elements.userprofile_organisation.attributes.id = "userprofile_organisation"
-elements.userprofile_organisation.attributes.class = "chosen-select"
-elements.userprofile_organisation.attributes.data-placeholder = "Select an organisation…"
-TXT;
+            userprofile_phone:
+              label: Phone
+              type: tel
+            userprofile_organisation:
+              label: Organisation
+              type: select
+              values:
+                none: None
+                Alpha: Alpha
+                Beta: Beta
+                Gamma’s Delta: Gamma’s Delta
+              attributes:
+                class: chosen-select
+                data-placeholder: Select an organisation…
+            TXT;
 
         $this
             ->add([
