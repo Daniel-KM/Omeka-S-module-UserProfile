@@ -848,9 +848,10 @@ class Module extends AbstractModule
     /**
      * Get the fields that cannot be displayed or edited in the current context.
      *
-     * The exclusions are rights: in the admin and public interfaces, they
-     * depend on the interface; via the rest api, they depend on the role of
-     * the current user, an admin or not. There is no exclusion for internal
+     * The exclusions of edition are rights: they depend on the role of the
+     * current user, an admin or not, in the admin interface and via the rest
+     * api, and the public interface is always for users. The exclusions of
+     * display depend on the interface. There is no exclusion for internal
      * processes.
      */
     protected function excludedFields(string $part): array
@@ -860,9 +861,9 @@ class Module extends AbstractModule
         $status = $services->get('Omeka\Status');
         if ($status->isSiteRequest()) {
             $context = 'public';
-        } elseif ($status->isAdminRequest()) {
+        } elseif ($status->isAdminRequest() && $part !== 'edit') {
             $context = 'admin';
-        } elseif ($status->isApiRequest()) {
+        } elseif ($status->isAdminRequest() || $status->isApiRequest()) {
             $user = $services->get('Omeka\AuthenticationService')->getIdentity();
             $context = $user && $services->get('Omeka\Acl')->isAdminRole($user->getRole())
                 ? 'admin'
