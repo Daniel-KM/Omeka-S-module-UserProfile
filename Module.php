@@ -507,8 +507,11 @@ class Module extends AbstractModule
         /** @var \Omeka\Settings\UserSettings $userSettings */
         $userSettings = $services->get('Omeka\Settings\User');
 
+        // The rights of display apply to the api too.
+        $exclude = $this->excludedFields('show');
+
         // Don't set the target id early to allow to use another user.
-        foreach (array_keys($fields) as $field) {
+        foreach (array_diff(array_keys($fields), $exclude) as $field) {
             $value = $userSettings->get($field, null, $user->id());
             $jsonLd['o:setting'][$field] = $value;
         }
