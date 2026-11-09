@@ -374,14 +374,14 @@ class Module extends AbstractModule
 
         // The simplest way to get data is to create a temp fieldset.
         // The fieldset may not be available during install/upgrade.
-        // Anyway, this is an empty fieldset filled with config.
+        // Anyway, this is an empty fieldset filled with config. It is always
+        // created by the form element manager, so the elements that require
+        // services (custom vocab, value suggest…) are created with them.
         /** @var \UserProfile\Form\UserSettingsFieldset $fieldset */
         $formManager = $services->get('FormElementManager');
-        if ($formManager->has(UserSettingsFieldset::class)) {
-            $fieldset = $formManager->get(UserSettingsFieldset::class);
-        } else {
-            $fieldset = new Fieldset('user-profile');
-        }
+        $fieldset = $formManager->has(UserSettingsFieldset::class)
+            ? $formManager->get(UserSettingsFieldset::class)
+            : $formManager->get(Fieldset::class);
         $fields = [];
         $exclude = [
             'admin' => ['show' => [], 'edit' => []],
