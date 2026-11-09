@@ -586,8 +586,7 @@ class Module extends AbstractModule
         foreach ($formFieldset->getElements() as $element) {
             if ($element instanceof \Laminas\Form\Element\MultiCheckbox
                 || $element instanceof \Laminas\Form\Element\Tel
-                || ($element instanceof \Laminas\Form\Element\Select
-                    && $element->getOption('empty_option') !== null)
+                || $element instanceof \Laminas\Form\Element\Select
             ) {
                 $name = $element->getName();
                 if (!in_array($name, $exclude)
