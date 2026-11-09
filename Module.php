@@ -660,7 +660,7 @@ class Module extends AbstractModule
                 continue;
             }
 
-            // Skip elements for security: a user cannot edit an excluded field.
+            // Skip silently the fields that the current user cannot edit.
             if (in_array($key, $exclude)) {
                 continue;
             }
@@ -845,23 +845,33 @@ class Module extends AbstractModule
         return array_keys($valueOptions);
     }
 
+    /**
+     * Get the fields that cannot be displayed or edited in the current context.
+     *
+     * The exclusions are rights: in the admin and public interfaces, they
+     * depend on the interface; via the rest api, they depend on the role of
+     * the current user, an admin or not. There is no exclusion for internal
+     * processes.
+     */
     protected function excludedFields(string $part): array
     {
         /** @var \Omeka\Mvc\Status $status */
         $services = $this->getServiceLocator();
         $status = $services->get('Omeka\Status');
-        $isSiteRequest = $status->isSiteRequest();
-        $isAdminRequest = $status->isAdminRequest();
-        if ($isSiteRequest || $isAdminRequest) {
-            $settings = $services->get('Omeka\Settings');
-            $exclude = $settings->get('userprofile_exclude', ['admin' => [$part => []], 'public' => [$part => []]]);
-            $exclude = $exclude[$isSiteRequest ? 'public' : 'admin'][$part] ?? [];
-            if (!is_array($exclude)) {
-                $exclude = [];
-            }
+        if ($status->isSiteRequest()) {
+            $context = 'public';
+        } elseif ($status->isAdminRequest()) {
+            $context = 'admin';
+        } elseif ($status->isApiRequest()) {
+            $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+            $context = $user && $services->get('Omeka\Acl')->isAdminRole($user->getRole())
+                ? 'admin'
+                : 'public';
         } else {
-            $exclude = [];
+            return [];
         }
-        return $exclude;
+        $exclude = $services->get('Omeka\Settings')->get('userprofile_exclude', []);
+        $exclude = $exclude[$context][$part] ?? [];
+        return is_array($exclude) ? $exclude : [];
     }
 }
