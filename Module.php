@@ -64,12 +64,6 @@ class Module extends AbstractModule
         // Manage user settings via rest api (and the new user via ui).
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\UserAdapter::class,
-            // 'api.create.pre',
-            'api.create.post',
-            [$this, 'apiCreatePreUser']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\UserAdapter::class,
             'api.hydrate.pre',
             [$this, 'apiHydratePreUser']
         );
@@ -417,34 +411,6 @@ class Module extends AbstractModule
         }
 
         $event->setParam('jsonLd', $jsonLd);
-    }
-
-    /**
-     * Unlike update, create cannot manage appended fields in views currently.
-     *
-     * This check is not for api, that is checked via hydrate.
-     */
-    public function apiCreatePreUser(Event $event): void
-    {
-        /** @var \Omeka\Mvc\Status $status */
-        $services = $this->getServiceLocator();
-        $status = $services->get('Omeka\Status');
-        if ($status->isApiRequest()) {
-            return;
-        }
-
-        /** @var \Laminas\Http\PhpEnvironment\Request $request */
-        $request = $services->get('Request');
-        $post = $request->getPost();
-        $userSettings = $post->offsetGet('user-settings') ?: [];
-        $post->offsetSet('o:setting', $userSettings);
-        $request->setPost($post);
-
-        /** @var \Omeka\Api\Request $request */
-        $request = $event->getParam('request');
-        $request->setContent($post->toArray());
-
-        $this->checkRequestValues($event);
     }
 
     public function apiHydratePreUser(Event $event): void
