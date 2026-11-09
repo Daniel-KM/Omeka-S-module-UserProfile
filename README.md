@@ -14,11 +14,36 @@ rest api.
 Installation
 ------------
 
-Install optional modules [Guest] and [Generic].
-
-Uncompress files and rename module folder "UserProfile".
-
 See general end user documentation for [installing a module].
+
+This module requires the module [Common], that should be installed first.
+
+* From the zip
+
+Download the last release [UserProfile.zip] from the list of releases and
+uncompress it in the `modules` directory.
+
+* From the source and for development
+
+If the module was installed from the source, rename the name of the folder of
+the module to `UserProfile`.
+
+* For test
+
+The module includes a test suite. Run it from the root of Omeka:
+
+```sh
+vendor/bin/phpunit -c modules/UserProfile/phpunit.xml --testdox
+```
+
+* Upgrade from module Guest Profile
+
+The profiles of the old module Guest Profile are converted automatically when
+this module is installed or upgraded: the fields "Statut" and "Autre statut…"
+are added to the config as `userprofile_status` and `userprofile_status_other`,
+in the simple syntax when the config is empty or in this syntax, or in ini when
+the config is in ini, and the values of the users are copied. The old values are kept in the user settings. Then the module Guest
+Profile can be uninstalled.
 
 
 Usage
@@ -26,34 +51,112 @@ Usage
 
 ### Configuration
 
-The fields are added via the config form of the module. The main option creates
-a [Zend/Laminas form], so the the options are the one used to create html input
-fields with a name, a type, attributes and options.
+The fields are added via the config form of the module, so only the admins can
+manage them. The main option creates a [Zend/Laminas form], so the the options
+are the one used to create html input fields with a name, a type, attributes and
+options.
 
 There are some specific option keys for each element:
-- `exclude_admin_show` (default: `false`)
-  Don't display the value in the admin user board.
-- `exclude_admin_edit` (default: `false`)
-  Forbid user to edit the value and don't append the element to the admin user
-  form.
-  When an element is not available in public or admin form, it's still available
-  via api and settings and can be used to store any data.
-- `exclude_public_show` (default: `false`)
-  Don't display the value in the public user board (module Guest).
-- `exclude_public_edit` (default: `false`)
-  Forbid guest user to edit the value and don't append the element to the public
-  user form (module Guest).
+- `show` (default: `all`)
+  Who can see the value: `all`, `admin` (the admin user board only), `user`
+  (the public user board only, with module Guest) or `none`.
+- `edit` (default: `all`)
+  Who can edit the value: `all`, `admin`, `user` or `none`. The element is not
+  appended to the forms of the others. For example, `admin` can be used for a
+  category that a user must not change, and `user` for personal settings that
+  an admin must not change.
 - `element_group` (default: `profile`)
   It is used by Omeka S v4 and allows to create fieldsets. You can create any
   dynamic groups you want. The default is `profile` so you don't need to set it.
+
+The old boolean options `exclude_admin_show`, `exclude_admin_edit`,
+`exclude_public_show` and `exclude_public_edit` are still read, but they are
+converted automatically during the upgrade.
+
+The options are rights. Via the rest api, they depend on the role of the user,
+an admin or not: the values that cannot be edited are skipped silently and the
+values that cannot be displayed are not output. In the admin interface, the
+rights of edition depend on the role too and the rights of display on the
+interface. The public interface is always for users. The other rules of Omeka
+apply: a user can update only the users allowed by the acl, generally only
+themself. The internal processes are not limited, so an element hidden to all
+can store any data, but the values remain readable in the database and by the
+other modules.
+
+Some examples:
+
+| `show`  | `edit`  | Example                                                                   |
+|---------|---------|---------------------------------------------------------------------------|
+| `all`   | `all`   | Phone, organisation or subject of research, filled by the user            |
+| `all`   | `admin` | Category of reader or validated registration, set by the admins only      |
+| `admin` | `admin` | Internal note about the user, hidden to them                              |
+| `admin` | `user`  | Answer to a question of the registration form, then reserved to admins    |
+| `user`  | `user`  | Personal preferences of the public interface, hidden to the admins        |
+| `none`  | `none`  | Technical data set by a process: external id (sso, ldap), last sync date  |
+
+```ini
+elements.userprofile_note.name                                  = "userprofile_note"
+elements.userprofile_note.type                                  = "Textarea"
+elements.userprofile_note.options.label                         = "Internal note"
+elements.userprofile_note.options.show                          = "admin"
+elements.userprofile_note.options.edit                          = "admin"
+
+elements.userprofile_category.name                              = "userprofile_category"
+elements.userprofile_category.type                              = "Select"
+elements.userprofile_category.options.label                     = "Category"
+elements.userprofile_category.options.value_options[student]    = "Student"
+elements.userprofile_category.options.value_options[researcher] = "Researcher"
+elements.userprofile_category.options.edit                      = "admin"
+```
 
 If one of the element is a select of a list, it is recommended to use module
 [Table], that simplifies configuration and that allows to use the same table
 in different places.
 
-Three formats are allowed: `ini`, `xml`, or `json`. Each format has pros and
-cons. The format `ini` is more readable, `xml` is designed for experts and `json`
-is more common.
+The simple syntax is the default one: it is a yaml mapping where each key is
+the name of a field and the value its label, or an object with the keys `label`,
+`type`, `required`, `values` (the choices of a select, radio or multicheckbox),
+`options` and `attributes`. The config form edits it as a form, with a button
+to switch to the text. The rights are set in the options, so the form keeps
+them:
+
+```yaml
+userprofile_phone:
+  label: Phone
+  type: tel
+userprofile_category:
+  label: Category
+  type: select
+  values:
+    student: Student
+    researcher: Researcher
+  options:
+    edit: admin
+userprofile_note: Note
+```
+
+The types are `text`, `textarea`, `email`, `tel`, `number`, `url`, `date`,
+`time`, `datetime`, `password`, `hidden`, `select`, `radio`, `checkbox` and
+`multicheckbox`, and the selects of Omeka `itemset`, `site`, `resourcetemplate`,
+`resourceclass` and `property`. With the matching module, the types
+`customvocab`, `thesaurus` and `table` are selects that require the option
+`custom_vocab_id`, `thesaurus` (the id of the scheme) or `table` (the id or the
+slug). Add the option `empty_option: ''` to keep the field optional and the
+attribute `multiple: true` to select many values. The names of the fields may
+contain only letters without accent, digits, `_` and `-`. For other types, use
+the full Laminas specifications below.
+
+The full Laminas specifications use the root key `elements`, so they cannot be
+edited as a form. Four formats are allowed: `yaml`, `ini`, `xml`, or `json`.
+Each format has pros and cons. The formats `yaml` and `ini` are more readable, `xml` is designed for
+experts and `json` is more common. The parser of the format `yaml` is included
+in the module [Common].
+
+The config form can convert the list of fields to another format when it is
+saved, the simple syntax included. The comments are not kept. A format is disabled when something in the
+list cannot be stored in it, for example a dot in a key with the format `ini`.
+When the list is modified at the same time and cannot be converted, nothing is
+saved and the error indicates the keys to fix.
 
 The main point to check are the keys, but as long as you use standard keys, it's
 not an issue. With the format `ini`, two characters are forbidden in keys : the
@@ -63,6 +166,40 @@ formats `xml` or `json`. With xml, the keys cannot contains space, greater sign
 `>`, lower sign `<`, single `'` and double quote `"`". With json, some
 characters should be escaped, and the data must be well-formed, in particular
 without trailing comma `,` on last key of each group.
+
+- `yaml`
+
+The indentation defines the structure, with spaces only (no tabulation). Quote
+a value when it contains a colon followed by a space or starts with a special
+character.
+
+```yaml
+elements:
+  userprofile_phone:
+    name: userprofile_phone
+    type: Tel
+    options:
+      element_group: profile
+      label: Phone
+    attributes:
+      id: userprofile_phone
+  userprofile_organisation:
+    name: userprofile_organisation
+    type: Select
+    options:
+      element_group: profile
+      label: Organisation
+      empty_option: ''
+      value_options:
+        none: None
+        Alpha: Alpha
+        Beta: Beta
+        Gamma’s Delta: Gamma’s Delta
+    attributes:
+      id: userprofile_organisation
+      class: chosen-select
+      data-placeholder: Select an organisation…
+```
 
 - `ini`
 
@@ -263,7 +400,7 @@ et [Université de la Guyane], currently managed with [Greenstone].
 [Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
 [Omeka themes]: https://omeka.org/s/docs/developer/themes/theme_settings
 [api credential key]: https://omeka.org/s/docs/developer/api/rest_api/#authentication
-[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile/-/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile/-/work_items
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
