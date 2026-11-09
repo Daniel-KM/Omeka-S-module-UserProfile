@@ -310,6 +310,16 @@ class Module extends AbstractModule
      */
     public function impossibleConfigFormats(): array
     {
+        return array_keys($this->impossibleConfigFormatReasons());
+    }
+
+    /**
+     * Get the reasons why the stored config cannot be converted, by format.
+     *
+     * @return string[]
+     */
+    public function impossibleConfigFormatReasons(): array
+    {
         $config = trim((string) $this->getServiceLocator()->get('Omeka\Settings')->get('userprofile_elements'));
         if ($config === '') {
             return [];
@@ -324,7 +334,7 @@ class Module extends AbstractModule
             try {
                 $this->convertConfigFormat($config, $format);
             } catch (\Throwable $e) {
-                $result[] = $format;
+                $result[$format] = $e->getMessage();
             }
         }
         return $result;
@@ -1134,16 +1144,19 @@ class Module extends AbstractModule
 
         $data = ['elements' => $this->normalizeValueOptions($source['elements'])];
 
+        // The messages are displayed to the admin.
+        $translator = $this->getServiceLocator()->get('MvcTranslator');
+
         switch ($format) {
             case 'fields':
                 $specs = [];
                 foreach ($data['elements'] as $name => $spec) {
                     $type = $this->fieldType($spec['type'] ?? 'Text');
                     if ($type === null) {
-                        throw new \RuntimeException((string) new PsrMessage(
+                        throw new \RuntimeException((string) (new PsrMessage(
                             'The type "{type}" of the field "{name}" is not available in the simple syntax.', // @translate
                             ['type' => $spec['type'], 'name' => $name]
-                        ));
+                        ))->setTranslator($translator));
                     }
                     $spec['type'] = $this->fieldTypeClass($type);
                     $specs[$name] = $spec;
@@ -1152,7 +1165,7 @@ class Module extends AbstractModule
                 break;
             case 'yaml':
                 if (!class_exists(\Symfony\Component\Yaml\Yaml::class)) {
-                    throw new \RuntimeException('The format yaml requires the library symfony/yaml.'); // @translate
+                    throw new \RuntimeException($translator->translate('The format yaml requires the library symfony/yaml.')); // @translate
                 }
                 $result = \Symfony\Component\Yaml\Yaml::dump($data, 10, 2);
                 break;
@@ -1171,7 +1184,7 @@ class Module extends AbstractModule
                 $result = strtr(preg_replace('~^<\?xml[^>]*\?>\s*~', '', $result), ['laminas-config>' => 'elements>']);
                 break;
             default:
-                throw new \RuntimeException('Unknown format.'); // @translate
+                throw new \RuntimeException($translator->translate('Unknown format.')); // @translate
         }
 
         $result = trim($result);
@@ -1184,10 +1197,10 @@ class Module extends AbstractModule
         if ($expected !== $actual) {
             $invalid = array_keys(array_diff_assoc($expected, $actual) ?: array_diff_assoc($actual, $expected));
             // The order is the only difference when there is no invalid key.
-            throw new \RuntimeException((string) new PsrMessage(
+            throw new \RuntimeException((string) (new PsrMessage(
                 'Some keys or values cannot be stored in this format: {list}', // @translate
                 ['list' => implode('; ', array_slice($invalid, 0, 5)) ?: 'order']
-            ));
+            ))->setTranslator($translator));
         }
 
         return $result;
@@ -1424,6 +1437,15 @@ class Module extends AbstractModule
         if ($format === 'fields') {
             $fieldsTextarea = $this->fieldsTextarea();
             $specs = $fieldsTextarea->stringToArray($elements);
+            $invalidNames = is_array($specs)
+                ? array_filter(array_keys($specs), fn ($name) => !preg_match('/^[A-Za-z0-9_-]+$/', (string) $name))
+                : [];
+            if ($invalidNames) {
+                return (string) new PsrMessage(
+                    'These names of field contain forbidden characters: only the letters without accent, the digits, "_" and "-" are allowed: {names}', // @translate
+                    ['names' => implode(', ', $invalidNames)]
+                );
+            }
             if (!is_array($specs) || !$fieldsTextarea->validateFields($specs)) {
                 return 'Invalid fields: check the yaml syntax, the field names (ascii, no space), the types and, for select/radio/multicheckbox, the list of values.'; // @translate
             }

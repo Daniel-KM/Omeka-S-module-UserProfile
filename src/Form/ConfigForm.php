@@ -14,6 +14,20 @@ class ConfigForm extends Form
     protected $impossibleFormats = [];
 
     /**
+     * @var string
+     */
+    protected $rawMessage = '';
+
+    /**
+     * Set the explanation displayed when the list cannot be edited as a form.
+     */
+    public function setRawMessage(string $rawMessage): self
+    {
+        $this->rawMessage = $rawMessage;
+        return $this;
+    }
+
+    /**
      * Set the formats to which the current list of fields cannot be converted.
      */
     public function setImpossibleFormats(array $impossibleFormats): self
@@ -57,6 +71,7 @@ TXT;
                     // form, but not the full Laminas specifications.
                     'class' => 'common-fields-textarea',
                     'data-raw-keys' => 'elements',
+                    'data-raw-message' => $this->rawMessage,
                     'data-enable-form' => '1',
                     'data-enable-yaml' => '1',
                     'data-enable-preview' => '0',
