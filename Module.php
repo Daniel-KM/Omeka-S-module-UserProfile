@@ -209,16 +209,16 @@ class Module extends AbstractModule
             $fields[$name] = $field;
 
             if ($element->getOption('exclude_admin_show')) {
-                $exclude['admin']['show'] = $name;
+                $exclude['admin']['show'][] = $name;
             }
             if ($element->getOption('exclude_admin_edit')) {
-                $exclude['admin']['edit'] = $name;
+                $exclude['admin']['edit'][] = $name;
             }
             if ($element->getOption('exclude_public_show')) {
-                $exclude['public']['show'] = $name;
+                $exclude['public']['show'][] = $name;
             }
             if ($element->getOption('exclude_public_edit')) {
-                $exclude['public']['edit'] = $name;
+                $exclude['public']['edit'][] = $name;
             }
         }
 
