@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-12 00:00+0000\n"
+"POT-Creation-Date: 2026-11-09 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,78 +17,182 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:32 Module.php:47
+#: data/scripts/upgrade.php:32 Module.php:97
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: view/common/admin/user-profile-list.phtml:24
-#: view/common/admin/user-profile.phtml:28
+#: data/scripts/upgrade.php:36
+msgid "Missing requirement. Unable to upgrade."
+msgstr ""
+
+#: Module.php:1191
+msgid "The format yaml requires the library symfony/yaml."
+msgstr ""
+
+#: Module.php:1210
+msgid "Unknown format."
+msgstr ""
+
+#: view/common/user-settings-list-profile.phtml:26
+#: view/common/user-settings-profile.phtml:30
 msgid "User profile"
 msgstr ""
 
-#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:75
+#: data/scripts/upgrade.php:43 data/scripts/upgrade.php:76
+#: data/scripts/upgrade.php:110
 msgid ""
 "To upgrade the config, you should go to the {link}config form{link_end} and "
 "submit it manually."
 msgstr ""
 
-#: data/scripts/upgrade.php:52
+#: data/scripts/upgrade.php:53
 msgid ""
 "It is now possible to remove values from guest form and to hide them in "
 "admin form."
 msgstr ""
 
-#: Module.php:121
+#: data/scripts/upgrade.php:97
+msgid ""
+"The options of rights of the config of the module User Profile were "
+"converted. The previous config was: {config}"
+msgstr ""
+
+#: data/scripts/upgrade.php:101
+msgid ""
+"The options of rights of the fields \"exclude_admin_show\", "
+"\"exclude_admin_edit\", \"exclude_public_show\" and \"exclude_public_edit\" "
+"were replaced by the options \"show\" and \"edit\" (\"all\", \"admin\", "
+"\"user\" or \"none\"). The previous config is logged."
+msgstr ""
+
+#: Module.php:186
+msgid ""
+"The fields of the module Guest Profile cannot be added automatically to the "
+"config. Add the fields \"userprofile_status\" and "
+"\"userprofile_status_other\" manually."
+msgstr ""
+
+#: Module.php:207
+msgid ""
+"The profiles of {total} users were converted from the module Guest Profile. "
+"Check the config of the module, then uninstall the module Guest Profile. The "
+"old values are kept in the user settings \"guestprofile_field_1\" and "
+"\"guestprofile_field_2\"."
+msgstr ""
+
+#: Module.php:285
 msgid "You should fix the config of the module."
 msgstr ""
 
-#: Module.php:164 Module.php:301
+#: Module.php:317
+msgid ""
+"The config cannot be converted to the format {format} and it was not saved: "
+"{message}"
+msgstr ""
+
+#: Module.php:401 Module.php:536
 msgid "The settings cannot be parsed: {msg}."
 msgstr ""
 
-#: Module.php:235
+#: Module.php:471
 msgid "These elements of user profile are invalid: {list}."
 msgstr ""
 
-#: Module.php:347 src/Form/UserSettingsFieldset.php:15
+#: Module.php:582 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr ""
 
-#: Module.php:490
+#: Module.php:699
 msgid "The key “o:setting” should be an array of user settings."
 msgstr ""
 
-#: Module.php:528 Module.php:550 Module.php:583 Module.php:606
+#: Module.php:737 Module.php:759 Module.php:792 Module.php:815
 msgid "A value is required for “{key}”."
 msgstr ""
 
-#: Module.php:540 Module.php:596
+#: Module.php:749 Module.php:805
 msgid "Only one value is allowed for “{key}”."
 msgstr ""
 
-#: Module.php:545 Module.php:601
+#: Module.php:754 Module.php:810
 msgid "One or more values (“{values}”) are not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:557 Module.php:613 Module.php:628
+#: Module.php:766 Module.php:822
 msgid "The value “{value}” is not allowed for “{key}”."
 msgstr ""
 
-#: Module.php:565 Module.php:623
+#: Module.php:774 Module.php:832
 msgid "An array of values is required for “{key}”."
 msgstr ""
 
-#: src/Form/ConfigForm.php:35
-msgid "List of fields (as xml, json, or ini)"
+#: Module.php:1180
+msgid ""
+"The type \"{type}\" of the field \"{name}\" is not available in the simple "
+"syntax."
 msgstr ""
 
-#: src/Form/ConfigForm.php:36
+#: Module.php:1224
+msgid "Some keys or values cannot be stored in this format: {list}"
+msgstr ""
+
+#: Module.php:1468
 msgid ""
-"List all input elements as xml, json or ini. It is recommended to prepend "
-"“userprofile_” to field names."
+"These names of field contain forbidden characters: only the letters without "
+"accent, the digits, \"_\" and \"-\" are allowed: {names}"
+msgstr ""
+
+#: Module.php:1473
+msgid ""
+"Invalid fields: check the yaml syntax, the field names (ascii, no space), "
+"the types and, for select/radio/multicheckbox, the list of values."
+msgstr ""
+
+#: Module.php:1530
+msgid "Undetermined format."
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
+msgid "List of fields"
+msgstr ""
+
+#: src/Form/ConfigForm.php:64
+msgid ""
+"List all input elements in the simple syntax, editable as a form, or as "
+"Laminas specifications in yaml, ini, json or xml. It is recommended to "
+"prepend “userprofile_” to field names."
+msgstr ""
+
+#: src/Form/ConfigForm.php:90
+msgid "Convert the list of fields when saving"
+msgstr ""
+
+#: src/Form/ConfigForm.php:91
+msgid ""
+"The comments are not kept. A format is disabled when a key or a value of the "
+"current list cannot be stored in it."
+msgstr ""
+
+#: src/Form/ConfigForm.php:92
+msgid "Keep the current format"
+msgstr ""
+
+#: src/Form/ConfigForm.php:108
+msgid "simple syntax, editable as a form"
 msgstr ""
 
 #: src/Form/UserSettingsFieldset.php:12
 msgid "User Profile"
+msgstr ""
+
+#: src/Service/Form/ConfigFormFactory.php:22
+msgid ""
+"The list uses the full Laminas specifications (root key \"elements\"). To "
+"edit it as a form, select \"simple syntax\" in the option \"Convert the list "
+"of fields when saving\" below, then save."
+msgstr ""
+
+#: src/Service/Form/ConfigFormFactory.php:26
+msgid "This conversion is not possible for the current list: {reason}"
 msgstr ""

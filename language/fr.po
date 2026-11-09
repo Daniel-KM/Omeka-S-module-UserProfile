@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-12 00:00+0000\n"
+"POT-Creation-Date: 2026-11-09 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -15,19 +15,32 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 
-#: data/scripts/upgrade.php:32 Module.php:47
+#: data/scripts/upgrade.php:32 Module.php:97
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
-#: view/common/admin/user-profile-list.phtml:24
-#: view/common/admin/user-profile.phtml:28
+#: data/scripts/upgrade.php:36
+msgid "Missing requirement. Unable to upgrade."
+msgstr "Prérequis manquant. Mise à jour impossible."
+
+#: Module.php:1191
+msgid "The format yaml requires the library symfony/yaml."
+msgstr "Le format yaml nécessite la bibliothèque symfony/yaml."
+
+#: Module.php:1210
+msgid "Unknown format."
+msgstr "Format inconnu."
+
+#: view/common/user-settings-list-profile.phtml:26
+#: view/common/user-settings-profile.phtml:30
 msgid "User profile"
 msgstr "Profil utilisateur"
 
-#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:75
+#: data/scripts/upgrade.php:43 data/scripts/upgrade.php:76
+#: data/scripts/upgrade.php:110
 msgid ""
 "To upgrade the config, you should go to the {link}config form{link_end} and "
 "submit it manually."
@@ -35,7 +48,7 @@ msgstr ""
 "Pour mettre à jour la configuration, vous devez enregistrer le {link}"
 "formulaire de configuration{link_end} manuellement."
 
-#: data/scripts/upgrade.php:52
+#: data/scripts/upgrade.php:53
 msgid ""
 "It is now possible to remove values from guest form and to hide them in "
 "admin form."
@@ -43,65 +56,194 @@ msgstr ""
 "Il est désormais possible de supprimer des valeurs des formulaires ou de les "
 "cacher."
 
-#: Module.php:121
+#: data/scripts/upgrade.php:97
+msgid ""
+"The options of rights of the config of the module User Profile were "
+"converted. The previous config was: {config}"
+msgstr ""
+"Les options de droits de la configuration du module User Profile ont été "
+"converties. La configuration précédente était : {config}"
+
+#: data/scripts/upgrade.php:101
+msgid ""
+"The options of rights of the fields \"exclude_admin_show\", "
+"\"exclude_admin_edit\", \"exclude_public_show\" and \"exclude_public_edit\" "
+"were replaced by the options \"show\" and \"edit\" (\"all\", \"admin\", "
+"\"user\" or \"none\"). The previous config is logged."
+msgstr ""
+"Les options de droits des champs « exclude_admin_show », "
+"« exclude_admin_edit », « exclude_public_show » et « exclude_public_edit » "
+"ont été remplacées par les options « show » et « edit » (« all », « admin », "
+"« user » ou « none »). La configuration précédente est enregistrée dans le "
+"journal."
+
+#: Module.php:186
+msgid ""
+"The fields of the module Guest Profile cannot be added automatically to the "
+"config. Add the fields \"userprofile_status\" and "
+"\"userprofile_status_other\" manually."
+msgstr ""
+"Les champs du module Guest Profile ne peuvent pas être ajoutés "
+"automatiquement à la configuration. Ajoutez manuellement les champs "
+"« userprofile_status » et « userprofile_status_other »."
+
+#: Module.php:207
+msgid ""
+"The profiles of {total} users were converted from the module Guest Profile. "
+"Check the config of the module, then uninstall the module Guest Profile. The "
+"old values are kept in the user settings \"guestprofile_field_1\" and "
+"\"guestprofile_field_2\"."
+msgstr ""
+"Les profils de {total} utilisateurs ont été convertis depuis le module Guest "
+"Profile. Vérifiez la configuration du module, puis désinstallez le module "
+"Guest Profile. Les anciennes valeurs sont conservées dans les paramètres "
+"utilisateur « guestprofile_field_1 » et « guestprofile_field_2 »."
+
+#: Module.php:285
 msgid "You should fix the config of the module."
 msgstr "Vous devez corriger la configuration du module."
 
-#: Module.php:164 Module.php:301
+#: Module.php:317
+msgid ""
+"The config cannot be converted to the format {format} and it was not saved: "
+"{message}"
+msgstr ""
+"La configuration ne peut pas être convertie au format {format} et n’a pas "
+"été enregistrée : {message}"
+
+#: Module.php:401 Module.php:536
 msgid "The settings cannot be parsed: {msg}."
 msgstr "Les paramètres ne peuvent pas être analysés : {msg}."
 
-#: Module.php:235
+#: Module.php:471
 msgid "These elements of user profile are invalid: {list}."
 msgstr "Ces éléments du profil utilisateur sont incorrects : {list}."
 
-#: Module.php:347 src/Form/UserSettingsFieldset.php:15
+#: Module.php:582 src/Form/UserSettingsFieldset.php:15
 msgid "Profile"
 msgstr "Profil"
 
-#: Module.php:490
+#: Module.php:699
 msgid "The key “o:setting” should be an array of user settings."
 msgstr "La clé « o:setting » doit être un tableau de paramètres utilisateur."
 
-#: Module.php:528 Module.php:550 Module.php:583 Module.php:606
+#: Module.php:737 Module.php:759 Module.php:792 Module.php:815
 msgid "A value is required for “{key}”."
 msgstr "Une valeur est nécessaire pour « {key} »."
 
-#: Module.php:540 Module.php:596
+#: Module.php:749 Module.php:805
 msgid "Only one value is allowed for “{key}”."
 msgstr "Une seule valeur est possible pour « {key} »."
 
-#: Module.php:545 Module.php:601
+#: Module.php:754 Module.php:810
 msgid "One or more values (“{values}”) are not allowed for “{key}”."
 msgstr ""
 "Une ou plusieurs valeurs (« {values} ») ne sont pas autorisées pour "
 "« {key} »."
 
-#: Module.php:557 Module.php:613 Module.php:628
+#: Module.php:766 Module.php:822
 msgid "The value “{value}” is not allowed for “{key}”."
 msgstr "La valeur « {value} » n’est pas autorisée pour « {key} »."
 
-#: Module.php:565 Module.php:623
+#: Module.php:774 Module.php:832
 msgid "An array of values is required for “{key}”."
 msgstr "Un tableau de valeurs est nécessaire pour « {key} »."
 
-#: src/Form/ConfigForm.php:35
-msgid "List of fields (as xml, json, or ini)"
-msgstr "Liste des champs (en xml, json ou ini)"
-
-#: src/Form/ConfigForm.php:36
+#: Module.php:1180
 msgid ""
-"List all input elements as xml, json or ini. It is recommended to prepend "
-"“userprofile_” to field names."
+"The type \"{type}\" of the field \"{name}\" is not available in the simple "
+"syntax."
 msgstr ""
-"Lister tous les champs d’entrées en xml, json ou ini. Il est recommandé de "
-"préfixer les noms de champ avec « userprofile_ »."
+"Le type « {type} » du champ « {name} » n’est pas disponible dans la syntaxe "
+"simplifiée."
+
+#: Module.php:1224
+msgid "Some keys or values cannot be stored in this format: {list}"
+msgstr ""
+"Certaines clés ou valeurs ne peuvent pas être enregistrées dans ce format : "
+"{list}"
+
+#: Module.php:1468
+msgid ""
+"These names of field contain forbidden characters: only the letters without "
+"accent, the digits, \"_\" and \"-\" are allowed: {names}"
+msgstr ""
+"Ces noms de champ contiennent des caractères interdits : seuls les lettres "
+"sans accent, les chiffres, « _ » et « - » sont autorisés : {names}"
+
+#: Module.php:1473
+msgid ""
+"Invalid fields: check the yaml syntax, the field names (ascii, no space), "
+"the types and, for select/radio/multicheckbox, the list of values."
+msgstr ""
+"Champs invalides : vérifiez la syntaxe yaml, les noms des champs (ascii, "
+"sans espace), les types et, pour les listes, boutons radio et cases à cocher "
+"multiples, la liste des valeurs."
+
+#: Module.php:1530
+msgid "Undetermined format."
+msgstr "Format indéterminé."
+
+#: src/Form/ConfigForm.php:63
+msgid "List of fields"
+msgstr "Liste des champs"
+
+#: src/Form/ConfigForm.php:64
+msgid ""
+"List all input elements in the simple syntax, editable as a form, or as "
+"Laminas specifications in yaml, ini, json or xml. It is recommended to "
+"prepend “userprofile_” to field names."
+msgstr ""
+"Lister tous les champs dans la syntaxe simplifiée, modifiable comme un "
+"formulaire, ou en spécifications Laminas en yaml, ini, json ou xml. Il est "
+"recommandé de préfixer les noms des champs par « userprofile_ »."
+
+#: src/Form/ConfigForm.php:90
+msgid "Convert the list of fields when saving"
+msgstr "Convertir la liste des champs à l’enregistrement"
+
+#: src/Form/ConfigForm.php:91
+msgid ""
+"The comments are not kept. A format is disabled when a key or a value of the "
+"current list cannot be stored in it."
+msgstr ""
+"Les commentaires ne sont pas conservés. Un format est désactivé quand une "
+"clé ou une valeur de la liste actuelle ne peut pas y être enregistrée."
+
+#: src/Form/ConfigForm.php:92
+msgid "Keep the current format"
+msgstr "Conserver le format actuel"
+
+#: src/Form/ConfigForm.php:108
+msgid "simple syntax, editable as a form"
+msgstr "syntaxe simplifiée, modifiable comme un formulaire"
 
 #: src/Form/UserSettingsFieldset.php:12
 msgid "User Profile"
 msgstr "Profil utilisateur"
 
-#, php-format
+#: src/Service/Form/ConfigFormFactory.php:22
+msgid ""
+"The list uses the full Laminas specifications (root key \"elements\"). To "
+"edit it as a form, select \"simple syntax\" in the option \"Convert the list "
+"of fields when saving\" below, then save."
+msgstr ""
+"La liste utilise les spécifications Laminas complètes (clé racine "
+"« elements »). Pour la modifier comme un formulaire, choisissez « syntaxe "
+"simplifiée » dans l’option « Convertir la liste des champs à "
+"l’enregistrement » ci-dessous, puis enregistrez."
+
+#: src/Service/Form/ConfigFormFactory.php:26
+msgid "This conversion is not possible for the current list: {reason}"
+msgstr "Cette conversion n’est pas possible pour la liste actuelle : {reason}"
+
+#~ msgid ""
+#~ "List all input elements as xml, json or ini. It is recommended to prepend "
+#~ "“userprofile_” to field names."
+#~ msgstr ""
+#~ "Lister tous les champs d’entrées en xml, json ou ini. Il est recommandé "
+#~ "de préfixer les noms de champ avec « userprofile_ »."
+
 #~ msgid "This module requires the module \"%s\"."
 #~ msgstr "Ce module requiert le module « %s »."
 
