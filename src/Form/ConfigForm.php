@@ -47,12 +47,20 @@ TXT;
                 'name' => 'userprofile_elements',
                 'type' => Element\Textarea::class,
                 'options' => [
-                    'label' => 'List of fields (as yaml, ini, json or xml)', // @translate
-                    'info' => 'List all input elements as yaml, ini, json or xml. It is recommended to prepend “userprofile_” to field names.', // @translate
+                    'label' => 'List of fields', // @translate
+                    'info' => 'List all input elements in the simple syntax, editable as a form, or as Laminas specifications in yaml, ini, json or xml. It is recommended to prepend “userprofile_” to field names.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
                 ],
                 'attributes' => [
                     'id' => 'userprofile_elements',
+                    // The editor of module Common edits the simple syntax as a
+                    // form, but not the full Laminas specifications.
+                    'class' => 'common-fields-textarea',
+                    'data-raw-keys' => 'elements',
+                    'data-enable-form' => '1',
+                    'data-enable-yaml' => '1',
+                    'data-enable-preview' => '0',
+                    'data-default-display' => 'form',
                     'required' => false,
                     'autofocus' => 'autofocus',
                     'rows' => '30',
@@ -80,10 +88,13 @@ TXT;
     protected function formatOptions(): array
     {
         $options = [];
-        foreach (['yaml', 'ini', 'json', 'xml'] as $format) {
+        $labels = [
+            'fields' => 'simple syntax, editable as a form', // @translate
+        ];
+        foreach (['fields', 'yaml', 'ini', 'json', 'xml'] as $format) {
             $options[$format] = [
                 'value' => $format,
-                'label' => $format,
+                'label' => $labels[$format] ?? $format,
                 'disabled' => in_array($format, $this->impossibleFormats, true),
             ];
         }

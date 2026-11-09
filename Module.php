@@ -37,7 +37,29 @@ class Module extends AbstractModule
 
     const NAMESPACE = __NAMESPACE__;
 
-    const CONFIG_FORMATS = ['yaml', 'ini', 'json', 'xml'];
+    const CONFIG_FORMATS = ['fields', 'yaml', 'ini', 'json', 'xml'];
+
+    /**
+     * Types of the simple syntax of the fields and their equivalent Laminas
+     * types, used to convert and to compare the configs.
+     */
+    const FIELD_TYPES = [
+        'checkbox' => ['Checkbox', \Common\Form\Element\OptionalCheckbox::class],
+        'date' => ['Date', \Common\Form\Element\OptionalDate::class],
+        'datetime' => ['DateTimeLocal', \Common\Form\Element\OptionalDateTimeLocal::class],
+        'email' => ['Email', \Common\Form\Element\OptionalEmail::class],
+        'hidden' => ['Hidden'],
+        'multicheckbox' => ['MultiCheckbox', \Common\Form\Element\OptionalMultiCheckbox::class],
+        'number' => ['Number', \Common\Form\Element\OptionalNumber::class],
+        'password' => ['Password'],
+        'radio' => ['Radio', \Common\Form\Element\OptionalRadio::class],
+        'select' => ['Select', \Common\Form\Element\OptionalSelect::class],
+        'tel' => ['Tel'],
+        'text' => ['Text'],
+        'textarea' => ['Textarea'],
+        'time' => ['Time', \Common\Form\Element\OptionalTime::class],
+        'url' => ['Url', \Common\Form\Element\OptionalUrl::class],
+    ];
 
 
     protected function preInstall(): void
@@ -202,6 +224,15 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'handleUserSettings']
         );
+    }
+
+    public function getConfigForm(PhpRenderer $renderer)
+    {
+        // The list of fields in the simple syntax can be edited as a form.
+        if ($renderer->getHelperPluginManager()->has('fieldsTextareaAssets')) {
+            $renderer->fieldsTextareaAssets();
+        }
+        return $this->getConfigFormAuto($renderer);
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -1096,6 +1127,21 @@ class Module extends AbstractModule
         $data = ['elements' => $this->normalizeValueOptions($source['elements'])];
 
         switch ($format) {
+            case 'fields':
+                $specs = [];
+                foreach ($data['elements'] as $name => $spec) {
+                    $type = $this->fieldType($spec['type'] ?? 'Text');
+                    if ($type === null) {
+                        throw new \RuntimeException((string) new PsrMessage(
+                            'The type "{type}" of the field "{name}" is not available in the simple syntax.', // @translate
+                            ['type' => $spec['type'], 'name' => $name]
+                        ));
+                    }
+                    $spec['type'] = $this->fieldTypeClass($type);
+                    $specs[$name] = $spec;
+                }
+                $result = $this->fieldsTextarea()->arrayToString($specs);
+                break;
             case 'yaml':
                 if (!class_exists(\Symfony\Component\Yaml\Yaml::class)) {
                     throw new \RuntimeException('The format yaml requires the library symfony/yaml.'); // @translate
@@ -1206,10 +1252,53 @@ class Module extends AbstractModule
     protected function comparableConfig(array $data): array
     {
         $data = $this->normalizeValueOptions($data);
+        foreach ($data as $name => $spec) {
+            if (!is_array($spec)) {
+                continue;
+            }
+            // The equivalent types and the keys that the simple syntax adds
+            // implicitly are the same.
+            $type = $this->fieldType((string) ($spec['type'] ?? 'Text'));
+            if ($type !== null) {
+                $data[$name]['type'] = $type;
+            }
+            if (isset($spec['options']['label']) && $spec['options']['label'] === '') {
+                unset($data[$name]['options']['label']);
+            }
+            if ($type === 'multicheckbox') {
+                unset($data[$name]['attributes']['multiple']);
+            }
+            if (isset($spec['attributes']['required']) && !$spec['attributes']['required']) {
+                unset($data[$name]['attributes']['required']);
+            }
+            foreach (['options', 'attributes'] as $key) {
+                if (isset($data[$name][$key]) && $data[$name][$key] === []) {
+                    unset($data[$name][$key]);
+                }
+            }
+        }
         array_walk_recursive($data, function (&$value): void {
             $value = (string) $value;
         });
+        // The order of the fields and of the values matters, not the order of
+        // the keys of a field.
+        foreach ($data as $name => $spec) {
+            if (is_array($spec)) {
+                $data[$name] = $this->sortKeys($spec);
+            }
+        }
         return $this->emptyArraysToStrings($data);
+    }
+
+    protected function sortKeys(array $data): array
+    {
+        ksort($data);
+        foreach ($data as $key => $value) {
+            if (is_array($value) && $key !== 'value_options') {
+                $data[$key] = $this->sortKeys($value);
+            }
+        }
+        return $data;
     }
 
     protected function emptyArraysToStrings(array $data): array
@@ -1223,12 +1312,60 @@ class Module extends AbstractModule
     }
 
     /**
-     * Get the format of the config: "json", "xml", "yaml" or "ini".
+     * Get the type of the simple syntax of a Laminas type, or null if none.
+     */
+    protected function fieldType(string $type): ?string
+    {
+        $type = strtolower(ltrim($type, '\\'));
+        foreach (self::FIELD_TYPES as $fieldType => $types) {
+            $equivalents = array_map('strtolower', array_merge($types, ['Laminas\\Form\\Element\\' . $types[0]]));
+            if ($type === $fieldType || in_array($type, $equivalents, true)) {
+                return $fieldType;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the class used by the simple syntax for a type.
+     */
+    protected function fieldTypeClass(string $type): string
+    {
+        $types = self::FIELD_TYPES[$type];
+        return $types[1] ?? 'Laminas\\Form\\Element\\' . $types[0];
+    }
+
+    /**
+     * Get the parser of the simple syntax of the fields, from module Common.
+     */
+    protected function fieldsTextarea(): \Common\Form\Element\FieldsTextarea
+    {
+        return new \Common\Form\Element\FieldsTextarea();
+    }
+
+    /**
+     * Get the format of the config: "fields", "json", "xml", "yaml" or "ini".
      *
      * The yaml and the ini are distinguished by the first meaningful line: a
-     * key followed by "=" or a section is ini, else yaml.
+     * key followed by "=" or a section is ini, else yaml. A yaml without the
+     * root key "elements" is the simple syntax of the fields, that can be
+     * edited as a form.
      */
     protected function configFormat(string $config): string
+    {
+        $format = $this->configFormatByText($config);
+        if ($format !== 'yaml' || !class_exists(\Symfony\Component\Yaml\Yaml::class)) {
+            return $format;
+        }
+        try {
+            $parsed = \Symfony\Component\Yaml\Yaml::parse(trim($config));
+        } catch (\Throwable $e) {
+            return $format;
+        }
+        return is_array($parsed) && !array_key_exists('elements', $parsed) ? 'fields' : 'yaml';
+    }
+
+    protected function configFormatByText(string $config): string
     {
         $config = trim($config);
         $first = mb_substr($config, 0, 1);
@@ -1275,6 +1412,15 @@ class Module extends AbstractModule
         }
 
         $format = $this->configFormat($elements);
+
+        if ($format === 'fields') {
+            $fieldsTextarea = $this->fieldsTextarea();
+            $specs = $fieldsTextarea->stringToArray($elements);
+            if (!is_array($specs) || !$fieldsTextarea->validateFields($specs)) {
+                return 'Invalid fields: check the yaml syntax, the field names (ascii, no space), the types and, for select/radio/multicheckbox, the list of values.'; // @translate
+            }
+            return ['elements' => $specs];
+        }
 
         if ($format === 'yaml') {
             // The parser is provided by the module Common.
