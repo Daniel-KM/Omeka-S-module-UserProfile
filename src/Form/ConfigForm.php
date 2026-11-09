@@ -78,6 +78,8 @@ class ConfigForm extends Form
                     'required' => false,
                     'autofocus' => 'autofocus',
                     'rows' => '30',
+                    // Fill the height of the window under the page header.
+                    'style' => 'height: calc(100vh - 6rem); min-height: 20rem;',
                     'placeholder' => $placeholder,
                 ],
             ])
