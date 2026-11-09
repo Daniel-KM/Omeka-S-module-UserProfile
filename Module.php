@@ -50,6 +50,108 @@ class Module extends AbstractModule
         }
     }
 
+    protected function postInstall(): void
+    {
+        $this->upgradeFromGuestProfile();
+    }
+
+    /**
+     * Convert the fields and the values of the old module Guest Profile.
+     *
+     * The module Guest Profile stored two fixed fields, a status and another
+     * status, in the user settings. They are added to the config, and the
+     * values are copied to new keys. The old values are kept, since they are
+     * not removed when the old module is uninstalled. The process can be run
+     * again.
+     */
+    public function upgradeFromGuestProfile(): void
+    {
+        $services = $this->getServiceLocator();
+        $connection = $services->get('Omeka\Connection');
+
+        $oldKeys = [
+            'guestprofile_field_1' => 'userprofile_status',
+            'guestprofile_field_2' => 'userprofile_status_other',
+        ];
+
+        $total = (int) $connection
+            ->executeQuery('SELECT COUNT(DISTINCT `user_id`) FROM `user_setting` WHERE `id` IN (?)', [array_keys($oldKeys)], [\Doctrine\DBAL\Connection::PARAM_STR_ARRAY])
+            ->fetchOne();
+        if (!$total) {
+            return;
+        }
+
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $settings = $services->get('Omeka\Settings');
+
+        $iniElements = <<<'INI'
+            elements.userprofile_status.name                            = "userprofile_status"
+            elements.userprofile_status.type                            = "Select"
+            elements.userprofile_status.options.element_group           = "profile"
+            elements.userprofile_status.options.label                   = "Statut"
+            elements.userprofile_status.options.empty_option            = "Choisissez votre statut…"
+            elements.userprofile_status.options.value_options[particulier] = "Particulier"
+            elements.userprofile_status.options.value_options[auteur]   = "Auteur"
+            elements.userprofile_status.options.value_options[chercheur] = "Chercheur"
+            elements.userprofile_status.options.value_options[étudiant] = "Étudiant"
+            elements.userprofile_status.options.value_options[éditeur]  = "Éditeur"
+            elements.userprofile_status.options.value_options[revue]    = "Revue"
+            elements.userprofile_status.options.value_options[magazine] = "Magazine"
+            elements.userprofile_status.options.value_options[bibliothèque] = "Bibliothèque"
+            elements.userprofile_status.options.value_options[institut] = "Institut"
+            elements.userprofile_status.options.value_options[autre]    = "Autre"
+            elements.userprofile_status.attributes.id                   = "userprofile_status"
+
+            elements.userprofile_status_other.name                      = "userprofile_status_other"
+            elements.userprofile_status_other.type                      = "Textarea"
+            elements.userprofile_status_other.options.element_group     = "profile"
+            elements.userprofile_status_other.options.label             = "Autre statut…"
+            elements.userprofile_status_other.attributes.id             = "userprofile_status_other"
+            elements.userprofile_status_other.attributes.placeholder    = "Indiquez votre statut…"
+            INI;
+
+        // Add the fields to the config when they are not set, only when the
+        // config is empty or in format ini, the format of the new fields.
+        $elements = trim((string) $settings->get('userprofile_elements'));
+        $hasFields = strpos($elements, 'userprofile_status') !== false;
+        $isIni = $elements === '' || !in_array(mb_substr($elements, 0, 1), ['{', '<'], true);
+        if (!$hasFields && $isIni) {
+            $settings->set('userprofile_elements', trim($elements . "\n\n" . $iniElements));
+            if (!$this->updateListFields()) {
+                $settings->set('userprofile_elements', $elements);
+                $this->updateListFields();
+                $isIni = false;
+            }
+        }
+        if (!$hasFields && !$isIni) {
+            $message = new PsrMessage(
+                'The fields of the module Guest Profile cannot be added automatically to the config, that is not in format ini. Add the fields "userprofile_status" and "userprofile_status_other" manually.' // @translate
+            );
+            $messenger->addWarning($message);
+        }
+
+        // Copy the values, without replacing a value already set.
+        foreach ($oldKeys as $oldKey => $newKey) {
+            $sql = <<<'SQL'
+                INSERT INTO `user_setting` (`id`, `user_id`, `value`)
+                SELECT :new_key, `old`.`user_id`, `old`.`value`
+                FROM `user_setting` AS `old`
+                WHERE `old`.`id` = :old_key
+                    AND NOT EXISTS (
+                        SELECT 1 FROM `user_setting` AS `new`
+                        WHERE `new`.`id` = :new_key AND `new`.`user_id` = `old`.`user_id`
+                    )
+                SQL;
+            $connection->executeStatement($sql, ['old_key' => $oldKey, 'new_key' => $newKey]);
+        }
+
+        $message = new PsrMessage(
+            'The profiles of {total} users were converted from the module Guest Profile. Check the config of the module, then uninstall the module Guest Profile. The old values are kept in the user settings "guestprofile_field_1" and "guestprofile_field_2".', // @translate
+            ['total' => $total]
+        );
+        $messenger->addSuccess($message);
+    }
+
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         // Append the settings to the current user.
