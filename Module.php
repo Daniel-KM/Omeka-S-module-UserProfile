@@ -22,6 +22,7 @@ use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\UserRepresentation;
 use Omeka\Module\AbstractModule;
+use UserProfile\Form\ConfigForm;
 use UserProfile\Form\UserSettingsFieldset;
 
 /**
@@ -35,6 +36,8 @@ class Module extends AbstractModule
     use TraitModule;
 
     const NAMESPACE = __NAMESPACE__;
+
+    const CONFIG_FORMATS = ['yaml', 'ini', 'json', 'xml'];
 
 
     protected function preInstall(): void
@@ -203,6 +206,10 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
+        if (!$this->convertPostedConfig($controller)) {
+            return false;
+        }
+
         if (!$this->handleConfigFormAuto($controller)) {
             return false;
         }
@@ -219,6 +226,69 @@ class Module extends AbstractModule
         }
 
         return true;
+    }
+
+    /**
+     * Convert the posted config into the format requested in the config form.
+     *
+     * When the conversion is not possible, nothing is saved and the form is
+     * displayed again with the submitted values.
+     */
+    protected function convertPostedConfig(AbstractController $controller): bool
+    {
+        $post = $controller->getRequest()->getPost();
+        $format = (string) $post->get('userprofile_convert_format', '');
+        $config = trim((string) $post->get('userprofile_elements', ''));
+        if (!in_array($format, self::CONFIG_FORMATS, true)
+            || $config === ''
+            || $this->configFormat($config) === $format
+        ) {
+            return true;
+        }
+
+        try {
+            $post->set('userprofile_elements', $this->convertConfigFormat($config, $format));
+            return true;
+        } catch (\Throwable $e) {
+            $controller->messenger()->addError(new PsrMessage(
+                'The config cannot be converted to the format {format} and it was not saved: {message}', // @translate
+                ['format' => $format, 'message' => $e->getMessage()]
+            ));
+        }
+
+        $form = $this->getServiceLocator()->get('FormElementManager')->get(ConfigForm::class);
+        $form->init();
+        $form->setData($post);
+        $this->invalidConfigForm = $form;
+
+        return false;
+    }
+
+    /**
+     * Get the formats to which the stored config cannot be converted.
+     *
+     * @return string[]
+     */
+    public function impossibleConfigFormats(): array
+    {
+        $config = trim((string) $this->getServiceLocator()->get('Omeka\Settings')->get('userprofile_elements'));
+        if ($config === '') {
+            return [];
+        }
+
+        $current = $this->configFormat($config);
+        $result = [];
+        foreach (self::CONFIG_FORMATS as $format) {
+            if ($format === $current) {
+                continue;
+            }
+            try {
+                $this->convertConfigFormat($config, $format);
+            } catch (\Throwable $e) {
+                $result[] = $format;
+            }
+        }
+        return $result;
     }
 
     /**
@@ -1008,6 +1078,151 @@ class Module extends AbstractModule
     }
 
     /**
+     * Convert a config into another format.
+     *
+     * The result is parsed and compared to the source, so a config is never
+     * converted with a loss, for example a key that a format does not allow.
+     * The comments are not kept.
+     *
+     * @throws \RuntimeException
+     */
+    public function convertConfigFormat(string $config, string $format): string
+    {
+        $source = $this->parseConfig($config);
+        if (is_string($source)) {
+            throw new \RuntimeException($source);
+        }
+
+        $data = ['elements' => $this->normalizeValueOptions($source['elements'])];
+
+        switch ($format) {
+            case 'yaml':
+                if (!class_exists(\Symfony\Component\Yaml\Yaml::class)) {
+                    throw new \RuntimeException('The format yaml requires the library symfony/yaml.'); // @translate
+                }
+                $result = \Symfony\Component\Yaml\Yaml::dump($data, 10, 2);
+                break;
+            case 'ini':
+                $writer = new \Laminas\Config\Writer\Ini();
+                $writer->setRenderWithoutSectionsFlags(true);
+                $result = $writer->toString($data);
+                break;
+            case 'json':
+                $result = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+                break;
+            case 'xml':
+                // A value is not always a valid name of a xml node.
+                $writer = new \Laminas\Config\Writer\Xml();
+                $result = $writer->toString($this->listValueOptions($data['elements']));
+                $result = strtr(preg_replace('~^<\?xml[^>]*\?>\s*~', '', $result), ['laminas-config>' => 'elements>']);
+                break;
+            default:
+                throw new \RuntimeException('Unknown format.'); // @translate
+        }
+
+        $result = trim($result);
+        $parsed = $this->parseConfig($result);
+        if (is_string($parsed)) {
+            throw new \RuntimeException($parsed);
+        }
+        $expected = $this->flatConfig($this->comparableConfig($source['elements']));
+        $actual = $this->flatConfig($this->comparableConfig($parsed['elements']));
+        if ($expected !== $actual) {
+            $invalid = array_keys(array_diff_assoc($expected, $actual) ?: array_diff_assoc($actual, $expected));
+            // The order is the only difference when there is no invalid key.
+            throw new \RuntimeException((string) new PsrMessage(
+                'Some keys or values cannot be stored in this format: {list}', // @translate
+                ['list' => implode('; ', array_slice($invalid, 0, 5)) ?: 'order']
+            ));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Flatten a config to a list of values by path.
+     */
+    protected function flatConfig(array $data, string $path = ''): array
+    {
+        $result = [];
+        foreach ($data as $key => $value) {
+            $keyPath = $path === '' ? (string) $key : $path . ' / ' . $key;
+            if (is_array($value)) {
+                $result += $this->flatConfig($value, $keyPath);
+            } else {
+                $result[$keyPath] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Convert the lists of value and label of xml into simple maps.
+     */
+    protected function normalizeValueOptions(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+            if ($key === 'value_options') {
+                $list = isset($value['value'], $value['label']) ? [$value] : $value;
+                $isList = (bool) $list;
+                foreach ($list as $option) {
+                    $isList = $isList && is_array($option) && isset($option['value'], $option['label']) && count($option) === 2;
+                }
+                $data[$key] = $isList ? array_column($list, 'label', 'value') : $value;
+            } else {
+                $data[$key] = $this->normalizeValueOptions($value);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Convert the maps of value options into lists of value and label for xml.
+     */
+    protected function listValueOptions(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+            if ($key === 'value_options' && count($value) === count(array_filter($value, 'is_scalar'))) {
+                $data[$key] = [];
+                foreach ($value as $optionValue => $label) {
+                    $data[$key][] = ['value' => (string) $optionValue, 'label' => $label];
+                }
+            } else {
+                $data[$key] = $this->listValueOptions($value);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Prepare a config for comparison: the formats don't keep the scalar types.
+     */
+    protected function comparableConfig(array $data): array
+    {
+        $data = $this->normalizeValueOptions($data);
+        array_walk_recursive($data, function (&$value): void {
+            $value = (string) $value;
+        });
+        return $this->emptyArraysToStrings($data);
+    }
+
+    protected function emptyArraysToStrings(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = $value ? $this->emptyArraysToStrings($value) : '';
+            }
+        }
+        return $data;
+    }
+
+    /**
      * Get the format of the config: "json", "xml", "yaml" or "ini".
      *
      * The yaml and the ini are distinguished by the first meaningful line: a
@@ -1045,11 +1260,16 @@ class Module extends AbstractModule
      */
     protected function readConfigElements()
     {
-        $services = $this->getServiceLocator();
-        $settings = $services->get('Omeka\Settings');
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        return $this->parseConfig((string) $settings->get('userprofile_elements'));
+    }
 
-        $elements = $settings->get('userprofile_elements');
-        $elements = trim((string) $elements);
+    /**
+     * @return array|string Return a string in case of error, else the elements.
+     */
+    protected function parseConfig(string $elements)
+    {
+        $elements = trim($elements);
         if (!$elements) {
             return ['elements' => []];
         }

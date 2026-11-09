@@ -2,11 +2,26 @@
 
 namespace UserProfile\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 
 class ConfigForm extends Form
 {
+    /**
+     * @var string[]
+     */
+    protected $impossibleFormats = [];
+
+    /**
+     * Set the formats to which the current list of fields cannot be converted.
+     */
+    public function setImpossibleFormats(array $impossibleFormats): self
+    {
+        $this->impossibleFormats = $impossibleFormats;
+        return $this;
+    }
+
     public function init(): void
     {
         $placeholder = <<<'TXT'
@@ -44,6 +59,34 @@ TXT;
                     'placeholder' => $placeholder,
                 ],
             ])
+            ->add([
+                'name' => 'userprofile_convert_format',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'Convert the list of fields when saving', // @translate
+                    'info' => 'The comments are not kept. A format is disabled when a key or a value of the current list cannot be stored in it.', // @translate
+                    'value_options' => ['' => 'Keep the current format'] // @translate
+                        + $this->formatOptions(),
+                ],
+                'attributes' => [
+                    'id' => 'userprofile_convert_format',
+                    'required' => false,
+                    'value' => '',
+                ],
+            ])
         ;
+    }
+
+    protected function formatOptions(): array
+    {
+        $options = [];
+        foreach (['yaml', 'ini', 'json', 'xml'] as $format) {
+            $options[$format] = [
+                'value' => $format,
+                'label' => $format,
+                'disabled' => in_array($format, $this->impossibleFormats, true),
+            ];
+        }
+        return $options;
     }
 }
