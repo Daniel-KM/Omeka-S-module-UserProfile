@@ -59,6 +59,14 @@ class Module extends AbstractModule
         'textarea' => ['Textarea'],
         'time' => ['Time', \Common\Form\Element\OptionalTime::class],
         'url' => ['Url', \Common\Form\Element\OptionalUrl::class],
+        'itemset' => ['ItemSetSelect', \Omeka\Form\Element\ItemSetSelect::class],
+        'property' => ['PropertySelect', \Omeka\Form\Element\PropertySelect::class],
+        'resourceclass' => ['ResourceClassSelect', \Omeka\Form\Element\ResourceClassSelect::class],
+        'resourcetemplate' => ['ResourceTemplateSelect', \Omeka\Form\Element\ResourceTemplateSelect::class],
+        'site' => ['SiteSelect', \Omeka\Form\Element\SiteSelect::class],
+        'customvocab' => ['CustomVocabSelect', \CustomVocab\Form\Element\CustomVocabSelect::class],
+        'table' => ['TableSelect', \Table\Form\Element\TableSelect::class],
+        'thesaurus' => ['ThesaurusSelect', \Thesaurus\Form\Element\ThesaurusSelect::class],
     ];
 
 
