@@ -571,7 +571,7 @@ class Module extends AbstractModule
             if ($element->getAttribute('required')
                 && (
                     ($isMultipleValues && !count($value))
-                    || (!$isMultipleValues && !strlen($value))
+                    || (!$isMultipleValues && (string) $value === '')
                 )
             ) {
                 $errorStore->addError('o:setting', new PsrMessage(
@@ -603,27 +603,21 @@ class Module extends AbstractModule
                         ));
                     }
                 } else {
-                    if (strlen($value) && !in_array($value, $allowedValues)) {
+                    if ((string) $value !== '' && !in_array($value, $allowedValues)) {
                         $errorStore->addError('o:setting', new PsrMessage(
                             'The value “{value}” is not allowed for “{key}”.', // @translate
                             ['value' => $value, 'key' => $key]
                         ));
                     }
                 }
-            } else {
-                if (method_exists($element, 'isMultiple') && $element->isMultiple()
-                    || $element instanceof \Laminas\Form\Element\MultiCheckbox
-                ) {
-                    $errorStore->addError('o:setting', new PsrMessage(
-                        'An array of values is required for “{key}”.', // @translate
-                        ['key' => $key]
-                    ));
-                } elseif (!in_array($value, $allowedValues)) {
-                    $errorStore->addError('o:setting', new PsrMessage(
-                        'The value “{value}” is not allowed for “{key}”.', // @translate
-                        ['value' => $value, 'key' => $key]
-                    ));
-                }
+            } elseif ((method_exists($element, 'isMultiple') && $element->isMultiple()
+                    || $element instanceof \Laminas\Form\Element\MultiCheckbox)
+                && !$isMultipleValues
+            ) {
+                $errorStore->addError('o:setting', new PsrMessage(
+                    'An array of values is required for “{key}”.', // @translate
+                    ['key' => $key]
+                ));
             }
             // TODO Add more check or use element validator.
         }
