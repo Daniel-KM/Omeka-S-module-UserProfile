@@ -983,8 +983,8 @@ class Module extends AbstractModule
                 }
             } elseif (isset($first['options'])) {
                 foreach ($valueOptions as $array) {
-                    foreach ($array['options'] as $option) {
-                        $result[$option] = true;
+                    foreach ($array['options'] as $value => $option) {
+                        $result[is_array($option) ? $option['value'] : $value] = true;
                     }
                 }
             }
