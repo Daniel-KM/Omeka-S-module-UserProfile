@@ -74,7 +74,7 @@ TXT;
                     'data-raw-message' => $this->rawMessage,
                     'data-enable-form' => '1',
                     'data-enable-yaml' => '1',
-                    'data-enable-preview' => '0',
+                    'data-enable-preview' => '1',
                     'data-default-display' => 'form',
                     'required' => false,
                     'autofocus' => 'autofocus',
