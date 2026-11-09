@@ -305,17 +305,17 @@ class Module extends AbstractModule
             ];
             $fields[$name] = $field;
 
-            if ($element->getOption('exclude_admin_show')) {
-                $exclude['admin']['show'][] = $name;
-            }
-            if ($element->getOption('exclude_admin_edit')) {
-                $exclude['admin']['edit'][] = $name;
-            }
-            if ($element->getOption('exclude_public_show')) {
-                $exclude['public']['show'][] = $name;
-            }
-            if ($element->getOption('exclude_public_edit')) {
-                $exclude['public']['edit'][] = $name;
+            foreach (['show', 'edit'] as $part) {
+                $allowed = $this->elementRight($element, $part);
+                if ($allowed === null) {
+                    $elementErrors[] = $name;
+                    continue 2;
+                }
+                foreach (['admin', 'public'] as $context) {
+                    if (!in_array($context, $allowed)) {
+                        $exclude[$context][$part][] = $name;
+                    }
+                }
             }
         }
 
@@ -850,6 +850,158 @@ class Module extends AbstractModule
                 'fields' => array_column($fields, 'label', 'name'),
             ]
         );
+    }
+
+    /**
+     * Get the contexts allowed to display or to edit an element.
+     *
+     * The option "show" or "edit" is "all" (default), "admin", "user" or
+     * "none". The old boolean options "exclude_admin_show", etc. are still
+     * read when the new option is not set.
+     *
+     * @return array|null The list of allowed contexts ("admin" and "public"),
+     * or null when the option is invalid.
+     */
+    protected function elementRight(Element $element, string $part): ?array
+    {
+        $right = $element->getOption($part);
+        if ($right === null || $right === '') {
+            return array_values(array_filter([
+                $element->getOption('exclude_admin_' . $part) ? null : 'admin',
+                $element->getOption('exclude_public_' . $part) ? null : 'public',
+            ]));
+        }
+        $rights = [
+            'all' => ['admin', 'public'],
+            'admin' => ['admin'],
+            'user' => ['public'],
+            'none' => [],
+        ];
+        return is_string($right) ? $rights[strtolower($right)] ?? null : null;
+    }
+
+    /**
+     * Convert the old options of rights of the config into the new ones.
+     *
+     * The four boolean options "exclude_admin_show", "exclude_admin_edit",
+     * "exclude_public_show" and "exclude_public_edit" are replaced by the
+     * options "show" and "edit". Only the lines or nodes of these options are
+     * modified for the formats ini and xml, so the comments are kept. The json
+     * is formatted again. The yaml is never converted, since it was added
+     * after the new options.
+     *
+     * @return string|null The converted config, or null when unchanged.
+     */
+    public function convertConfigRights(string $config): ?string
+    {
+        if (strpos($config, 'exclude_') === false) {
+            return null;
+        }
+
+        $rightOf = function (array $excludes): string {
+            $isAdmin = empty($excludes['admin']);
+            $isUser = empty($excludes['public']);
+            return $isAdmin && $isUser ? 'all' : ($isAdmin ? 'admin' : ($isUser ? 'user' : 'none'));
+        };
+        $isTrue = fn ($value): bool => in_array(strtolower(trim((string) $value, " \t\"'")), ['1', 'true', 'yes', 'on'], true);
+
+        $format = $this->configFormat($config);
+
+        if ($format === 'ini') {
+            $pattern = '~^(\s*elements\.([^.=\s]+)\.options\.)exclude_(admin|public)_(show|edit)\s*=\s*(.*?)\s*$~m';
+            if (!preg_match_all($pattern, $config, $matches, PREG_SET_ORDER)) {
+                return null;
+            }
+            $excludes = [];
+            foreach ($matches as $match) {
+                $excludes[$match[2]][$match[4]][$match[3]] = $isTrue($match[5]);
+                $excludes[$match[2]][$match[4]]['prefix'] = $match[1];
+            }
+            $done = [];
+            $result = preg_replace_callback($pattern, function ($match) use (&$done, $excludes, $rightOf) {
+                $key = $match[2] . '/' . $match[4];
+                if (isset($done[$key])) {
+                    return "\0";
+                }
+                $done[$key] = true;
+                $right = $rightOf($excludes[$match[2]][$match[4]]);
+                return $right === 'all' ? "\0" : $match[1] . $match[4] . ' = "' . $right . '"';
+            }, $config);
+            // Remove the replaced lines.
+            return preg_replace("~^\0(?:\r?\n)?~m", '', $result);
+        }
+
+        if ($format === 'json') {
+            $data = json_decode($config, true);
+            if (!is_array($data) || empty($data['elements']) || !is_array($data['elements'])) {
+                return null;
+            }
+            foreach ($data['elements'] as &$element) {
+                if (empty($element['options']) || !is_array($element['options'])) {
+                    continue;
+                }
+                foreach (['show', 'edit'] as $part) {
+                    $excludes = [];
+                    foreach (['admin', 'public'] as $context) {
+                        $key = "exclude_{$context}_{$part}";
+                        if (array_key_exists($key, $element['options'])) {
+                            $excludes[$context] = $isTrue(is_bool($element['options'][$key]) ? (int) $element['options'][$key] : $element['options'][$key]);
+                            unset($element['options'][$key]);
+                        }
+                    }
+                    if ($excludes && !isset($element['options'][$part]) && ($right = $rightOf($excludes)) !== 'all') {
+                        $element['options'][$part] = $right;
+                    }
+                }
+            }
+            unset($element);
+            return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        if ($format === 'xml') {
+            $dom = new \DOMDocument();
+            $dom->preserveWhiteSpace = true;
+            if (!@$dom->loadXML($config)) {
+                return null;
+            }
+            $xpath = new \DOMXPath($dom);
+            $isChanged = false;
+            foreach ($xpath->query('/*/*/options') as $options) {
+                foreach (['show', 'edit'] as $part) {
+                    $excludes = [];
+                    $first = null;
+                    foreach (['admin', 'public'] as $context) {
+                        foreach ($xpath->query("exclude_{$context}_{$part}", $options) as $node) {
+                            $excludes[$context] = $isTrue($node->textContent);
+                            $first ??= $node;
+                            if ($node !== $first) {
+                                $node->parentNode->removeChild($node);
+                            }
+                        }
+                    }
+                    if (!$first) {
+                        continue;
+                    }
+                    $isChanged = true;
+                    $right = $rightOf($excludes);
+                    if ($right === 'all' || $xpath->query($part, $options)->length) {
+                        $first->parentNode->removeChild($first);
+                    } else {
+                        $first->parentNode->replaceChild($dom->createElement($part, $right), $first);
+                    }
+                }
+            }
+            if (!$isChanged) {
+                return null;
+            }
+            // Remove the empty lines left by the removed nodes.
+            $result = strpos(ltrim($config), '<?xml') === 0
+                ? $dom->saveXML()
+                : $dom->saveXML($dom->documentElement);
+            return trim(preg_replace('~\n[ \t]*(?=\n)~', '', $result));
+        }
+
+        return null;
     }
 
     /**
