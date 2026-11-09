@@ -13,6 +13,7 @@ use Common\TraitModule;
 use Laminas\Config\Reader\Ini as IniReader;
 use Laminas\Config\Reader\Json as JsonReader;
 use Laminas\Config\Reader\Xml as XmlReader;
+use Laminas\Config\Reader\Yaml as YamlReader;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Form\Element;
@@ -114,7 +115,7 @@ class Module extends AbstractModule
         // config is empty or in format ini, the format of the new fields.
         $elements = trim((string) $settings->get('userprofile_elements'));
         $hasFields = strpos($elements, 'userprofile_status') !== false;
-        $isIni = $elements === '' || !in_array(mb_substr($elements, 0, 1), ['{', '<'], true);
+        $isIni = $elements === '' || $this->configFormat($elements) === 'ini';
         if (!$hasFields && $isIni) {
             $settings->set('userprofile_elements', trim($elements . "\n\n" . $iniElements));
             if (!$this->updateListFields()) {
@@ -852,6 +853,39 @@ class Module extends AbstractModule
     }
 
     /**
+     * Get the format of the config: "json", "xml", "yaml" or "ini".
+     *
+     * The yaml and the ini are distinguished by the first meaningful line: a
+     * key followed by "=" or a section is ini, else yaml.
+     */
+    protected function configFormat(string $config): string
+    {
+        $config = trim($config);
+        $first = mb_substr($config, 0, 1);
+        if ($first === '{') {
+            return 'json';
+        } elseif ($first === '<') {
+            return 'xml';
+        }
+        foreach (explode("\n", $config) as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === ';' || $line[0] === '#') {
+                continue;
+            }
+            if ($line === '---' || $line[0] === '-') {
+                return 'yaml';
+            }
+            if ($line[0] === '[') {
+                return 'ini';
+            }
+            $equal = strpos($line, '=');
+            $colon = strpos($line, ':');
+            return $equal !== false && ($colon === false || $equal < $colon) ? 'ini' : 'yaml';
+        }
+        return 'ini';
+    }
+
+    /**
      * @return array|string Return a string in case of error, else the elements.
      */
     protected function readConfigElements()
@@ -865,15 +899,29 @@ class Module extends AbstractModule
             return ['elements' => []];
         }
 
-        $isJson = mb_substr($elements, 0, 1) === '{';
-        $isXml = mb_substr($elements, 0, 1) === '<';
-        $isIni = !$isJson && !$isXml;
+        $format = $this->configFormat($elements);
 
-        if ($isIni) {
+        if ($format === 'yaml') {
+            // The parser is provided by the module Common.
+            if (!class_exists(\Symfony\Component\Yaml\Yaml::class)) {
+                return 'The format yaml requires the library symfony/yaml.'; // @translate
+            }
+            try {
+                $reader = new YamlReader([\Symfony\Component\Yaml\Yaml::class, 'parse']);
+                $config = $reader->fromString($elements);
+                if (is_array($config) && !empty($config['elements']) && is_array($config['elements'])) {
+                    return $config;
+                }
+            } catch (\Throwable $e) {
+                return $e->getMessage();
+            }
+        }
+
+        if ($format === 'ini') {
             try {
                 $reader = new IniReader;
                 $config = $reader->fromString($elements);
-                if ($config && count($config['elements'])) {
+                if (is_array($config) && !empty($config['elements']) && is_array($config['elements'])) {
                     return $config;
                 }
             } catch (\Laminas\Config\Exception\RuntimeException $e) {
@@ -881,11 +929,11 @@ class Module extends AbstractModule
             }
         }
 
-        if ($isJson) {
+        if ($format === 'json') {
             try {
                 $reader = new JsonReader;
                 $config = $reader->fromString($elements);
-                if ($config && count($config['elements'])) {
+                if (is_array($config) && !empty($config['elements']) && is_array($config['elements'])) {
                     return $config;
                 }
             } catch (\Laminas\Config\Exception\RuntimeException $e) {
@@ -893,7 +941,7 @@ class Module extends AbstractModule
             }
         }
 
-        if ($isXml) {
+        if ($format === 'xml') {
             try {
                 $reader = new XmlReader;
                 $config = $reader->fromString($elements);

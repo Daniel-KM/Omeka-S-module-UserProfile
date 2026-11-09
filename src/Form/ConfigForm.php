@@ -32,8 +32,8 @@ TXT;
                 'name' => 'userprofile_elements',
                 'type' => Element\Textarea::class,
                 'options' => [
-                    'label' => 'List of fields (as xml, json, or ini)', // @translate
-                    'info' => 'List all input elements as xml, json or ini. It is recommended to prepend “userprofile_” to field names.', // @translate
+                    'label' => 'List of fields (as yaml, ini, json or xml)', // @translate
+                    'info' => 'List all input elements as yaml, ini, json or xml. It is recommended to prepend “userprofile_” to field names.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile#Usage',
                 ],
                 'attributes' => [
